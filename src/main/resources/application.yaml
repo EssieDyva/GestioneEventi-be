@@ -18,5 +18,5 @@ app:
   frontend:
     url: http://localhost:5173
   employee-directory:
-    url: ${EMP_DIR_URL:http://employees-api.local}
-    fallback-allow-if-unreachable: false
+    url: http://localhost:8081
+    fallback-allow-if-unreachable: true
