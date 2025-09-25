@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none   # non ricrea le tabelle, usa quelle del mock-up
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -17,11 +17,10 @@ spring:
 server:
   port: 8080
 
-# Config custom per JWT (puoi personalizzare secret ed expiration)
 app:
   jwt:
     secret: my-super-secret-key-which-must-be-long
     expiration-minutes: 60
   employee-directory:
     url: http://localhost:8081   # esempio, backend fittizio per EmployeeDirectoryClient
-    fallback-allow-if-unreachable: false
+    fallback-allow-if-unreachable: true

@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .env
+firebase-service-account.json
 
 ### STS ###
 .apt_generated
