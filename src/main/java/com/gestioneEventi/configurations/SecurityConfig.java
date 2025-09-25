@@ -9,15 +9,21 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.gestioneEventi.services.JwtService;
 import com.gestioneEventi.utils.JwtAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtFilter;
+    private final JwtService jwtService;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
+    public SecurityConfig(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService);
     }
 
     @Bean
@@ -29,9 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/events/**").hasAnyAuthority("EDITOR", "ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

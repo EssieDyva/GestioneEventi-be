@@ -1,22 +1,27 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/yourdb
-    username: ${DB_USER:root}
-    password: ${DB_PASS:password}
+    url: jdbc:mysql://localhost:3306/gestione_eventi?useSSL=false&serverTimezone=UTC
+    username: root
+    password: ""
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: false
+      ddl-auto: none   # non ricrea le tabelle, usa quelle del mock-up
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
 
 server:
   port: 8080
 
+# Config custom per JWT (puoi personalizzare secret ed expiration)
 app:
   jwt:
-    secret: ${JWT_SECRET}
-    expiration-minutes: 480
-  frontend:
-    url: http://localhost:5173
+    secret: my-super-secret-key-which-must-be-long
+    expiration-minutes: 60
   employee-directory:
-    url: http://localhost:8081
-    fallback-allow-if-unreachable: true
+    url: http://localhost:8081   # esempio, backend fittizio per EmployeeDirectoryClient
+    fallback-allow-if-unreachable: false
