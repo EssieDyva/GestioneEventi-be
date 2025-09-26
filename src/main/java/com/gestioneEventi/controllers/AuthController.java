@@ -30,7 +30,6 @@ public class AuthController {
     public ResponseEntity<?> authenticate(@RequestBody TokenRequest request) {
         try {
             FirebaseToken decoded = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
-            System.out.println("Token valido, email: " + decoded.getEmail());
             String email = decoded.getEmail();
 
             if (email == null || !directoryClient.isEmployee(email)) {
