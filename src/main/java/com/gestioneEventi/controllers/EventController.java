@@ -47,7 +47,7 @@ public class EventController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EDITOR')")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         if (!eventRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
