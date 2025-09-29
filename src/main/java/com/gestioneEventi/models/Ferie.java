@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Event {
+public class Ferie {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +19,7 @@ public class Event {
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
-    
+
     @ManyToOne
     private User createdBy;
 }

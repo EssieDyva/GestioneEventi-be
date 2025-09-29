@@ -1,6 +1,8 @@
 package com.gestioneEventi.controllers;
 
+import com.gestioneEventi.models.Role;
 import com.gestioneEventi.models.User;
+import com.gestioneEventi.repositories.RoleRepository;
 import com.gestioneEventi.repositories.UserRepository;
 import com.gestioneEventi.services.EmployeeDirectoryClient;
 import com.gestioneEventi.services.JwtService;
@@ -24,6 +26,9 @@ public class AuthController {
     private UserRepository userRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private JwtService jwtService;
 
     @PostMapping("/firebase")
@@ -37,7 +42,17 @@ public class AuthController {
             }
 
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found in DB"));
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setEmail(email);
+                    newUser.setName(decoded.getName());
+
+                    Role defaultRole = roleRepository.findByName("EMPLOYEE")
+                            .orElseThrow(() -> new RuntimeException("Ruolo non trovato"));
+                    newUser.setRole(defaultRole);
+
+                    return userRepository.save(newUser);
+                });
 
             String jwt = jwtService.generateToken(user);
             return ResponseEntity.ok(new TokenResponse(jwt));
