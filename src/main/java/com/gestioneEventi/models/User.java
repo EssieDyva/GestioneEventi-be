@@ -20,9 +20,6 @@ public class User {
 
     private String name;
 
-    private String oauthProvider;
-    private String oauthId;
-
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role role;
