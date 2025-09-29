@@ -20,7 +20,7 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    expiration-minutes: 60
+    expiration: 86400000
   employee-directory:
     url: http://localhost:8081   # esempio, backend fittizio per EmployeeDirectoryClient
     fallback-allow-if-unreachable: true
