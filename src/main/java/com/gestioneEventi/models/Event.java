@@ -18,6 +18,4 @@ public class Event {
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
-    @ManyToOne
-    private User createdBy;
 }

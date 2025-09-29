@@ -23,7 +23,7 @@ public class EventController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('editor') or hasAuthority('admin')")
     public Event createEvent(@RequestBody Event event) {
         return eventRepository.save(event);
     }
@@ -36,7 +36,7 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('editor') or hasAuthority('admin')")
     public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event eventDetails) {
         return eventRepository.findById(id).map(event -> {
             event.setTitle(eventDetails.getTitle());
@@ -47,7 +47,7 @@ public class EventController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EDITOR')")
+    @PreAuthorize("hasAuthority('admin') or hasAuthority('editor')")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         if (!eventRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
