@@ -3,9 +3,11 @@ package com.gestioneEventi.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.gestioneEventi.models.Event;
+import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
 
 import java.util.List;
@@ -24,7 +26,8 @@ public class EventController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
-    public Event createEvent(@RequestBody Event event) {
+    public Event createEvent(@RequestBody Event event, @AuthenticationPrincipal User user) {
+        event.setCreatedBy(user);
         return eventRepository.save(event);
     }
 

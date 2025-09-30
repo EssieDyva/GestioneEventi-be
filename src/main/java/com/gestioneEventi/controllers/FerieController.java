@@ -24,6 +24,7 @@ import com.gestioneEventi.models.Status;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.FerieRepository;
+import com.gestioneEventi.services.FerieService;
 
 @RestController
 @RequestMapping("/api/ferie")
@@ -35,10 +36,11 @@ public class FerieController {
     @Autowired
     private EventRepository eventRepository;
 
+    @Autowired
+    private FerieService ferieService;
+
     @PostMapping
-    public ResponseEntity<?> createFerie(@RequestBody Ferie ferie,
-            @AuthenticationPrincipal User user) {
-        // Recupera l'evento a cui l'utente vuole collegare la richiesta
+    public ResponseEntity<?> createFerie(@RequestBody Ferie ferie, @AuthenticationPrincipal User user) {
         if (ferie.getEvent() == null) {
             return ResponseEntity.badRequest().body("Evento non specificato");
         }
@@ -57,6 +59,7 @@ public class FerieController {
             return ResponseEntity.status(403).body("Non puoi richiedere ferie per questo evento");
         }
 
+        ferieService.validateFerieDates(ferie, event);
         ferie.setCreatedBy(user); // associa l'utente
         ferie.setStatus(Status.APPROVED); // default
         return ResponseEntity.ok(ferieRepository.save(ferie));
@@ -75,13 +78,13 @@ public class FerieController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Ferie> updateFerie(@PathVariable Long id, @RequestBody Ferie ferieDetails) {
-        return ferieRepository.findById(id).map(ferie -> {
-            ferie.setTitle(ferieDetails.getTitle());
-            ferie.setStartDate(ferieDetails.getStartDate());
-            ferie.setEndDate(ferieDetails.getEndDate());
-            return ResponseEntity.ok(ferieRepository.save(ferie));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> updateFerie(@PathVariable Long id, @RequestBody Ferie ferieDetails) {
+        try {
+            Ferie updated = ferieService.updateFerie(id, ferieDetails);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}/status")
