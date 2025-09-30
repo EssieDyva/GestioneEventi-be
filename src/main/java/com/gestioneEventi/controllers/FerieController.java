@@ -1,6 +1,5 @@
 package com.gestioneEventi.controllers;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.Ferie;
 import com.gestioneEventi.models.Status;
 import com.gestioneEventi.models.User;
-import com.gestioneEventi.repositories.EventRepository;
-import com.gestioneEventi.repositories.FerieRepository;
 import com.gestioneEventi.services.FerieService;
 
 @RestController
@@ -31,55 +27,30 @@ import com.gestioneEventi.services.FerieService;
 public class FerieController {
 
     @Autowired
-    private FerieRepository ferieRepository;
-
-    @Autowired
-    private EventRepository eventRepository;
-
-    @Autowired
     private FerieService ferieService;
 
     @PostMapping
     public ResponseEntity<?> createFerie(@RequestBody Ferie ferie, @AuthenticationPrincipal User user) {
-        if (ferie.getEvent() == null) {
-            return ResponseEntity.badRequest().body("Evento non specificato");
-        }
-        Event event = eventRepository.findById(ferie.getEvent().getId())
-                .orElse(null);
-
-        if (event == null) {
-            return ResponseEntity.badRequest().body("Evento non trovato");
-        }
-
-        boolean canRequest = event.getInvitedGroups().stream()
-                .anyMatch(group -> group.getMembers().contains(user)) &&
-                LocalDate.now().isBefore(event.getStartDate());
-
-        if (!canRequest) {
-            return ResponseEntity.status(403).body("Non puoi richiedere ferie per questo evento");
-        }
-
         try {
-            ferieService.validateFerieDates(ferie, event);
+            Ferie created = ferieService.createFerie(ferie, user);
+            return ResponseEntity.ok(created);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        
-        ferie.setCreatedBy(user); // associa l'utente
-        ferie.setStatus(Status.APPROVED); // default
-        return ResponseEntity.ok(ferieRepository.save(ferie));
     }
 
     @GetMapping("/user/me")
-    public List<Ferie> getMyFerie(Authentication authentication) {
+    public ResponseEntity<List<Ferie>> getMyFerie(Authentication authentication) {
         String email = authentication.getName();
-        return ferieRepository.findByCreatedByEmail(email);
+        List<Ferie> ferie = ferieService.getFerieByUserEmail(email);
+        return ResponseEntity.ok(ferie);
     }
 
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
-    public List<Ferie> getAllFerie() {
-        return ferieRepository.findAll();
+    public ResponseEntity<List<Ferie>> getAllFerie() {
+        List<Ferie> ferie = ferieService.getAllFerie();
+        return ResponseEntity.ok(ferie);
     }
 
     @PutMapping("/{id}")
@@ -95,20 +66,22 @@ public class FerieController {
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<?> updateFerieStatus(@PathVariable Long id, @RequestParam Status status) {
-        return ferieRepository.findById(id).map(ferie -> {
-            ferie.setStatus(status);
-            ferieRepository.save(ferie);
-            return ResponseEntity.ok(ferie);
-        }).orElse(ResponseEntity.notFound().build());
+        try {
+            Ferie updated = ferieService.updateFerieStatus(id, status);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EDITOR')")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        if (!ferieRepository.existsById(id)) {
+    public ResponseEntity<?> deleteFerie(@PathVariable Long id) {
+        try {
+            ferieService.deleteFerie(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
         }
-        ferieRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
     }
 }

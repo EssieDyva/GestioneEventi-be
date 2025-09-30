@@ -1,5 +1,6 @@
 package com.gestioneEventi.controllers;
 
+import com.gestioneEventi.dto.EventDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.User;
-import com.gestioneEventi.repositories.EventRepository;
+import com.gestioneEventi.services.EventService;
 
 import java.util.List;
 
@@ -17,46 +18,58 @@ import java.util.List;
 public class EventController {
 
     @Autowired
-    private EventRepository eventRepository;
+    private EventService eventService;
 
     @GetMapping
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+    public ResponseEntity<List<EventDTO>> getAllEvents() {
+        return ResponseEntity.ok(
+                eventService.getAllEvents()
+                        .stream()
+                        .map(EventDTO::new)
+                        .toList()
+        );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getEvent(@PathVariable Long id) {
+        try {
+            Event event = eventService.getEventById(id);
+            return ResponseEntity.ok(event);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
-    public Event createEvent(@RequestBody Event event, @AuthenticationPrincipal User user) {
-        event.setCreatedBy(user);
-        return eventRepository.save(event);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Event> getEvent(@PathVariable Long id) {
-        return eventRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> createEvent(@RequestBody Event event, @AuthenticationPrincipal User user) {
+        try {
+            Event created = eventService.createEvent(event, user);
+            return ResponseEntity.ok(created);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
-    public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event eventDetails) {
-        return eventRepository.findById(id).map(event -> {
-            event.setTitle(eventDetails.getTitle());
-            event.setStartDate(eventDetails.getStartDate());
-            event.setEndDate(eventDetails.getEndDate());
-            event.setInvitedGroups(eventDetails.getInvitedGroups());
-            return ResponseEntity.ok(eventRepository.save(event));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> updateEvent(@PathVariable Long id, @RequestBody Event eventDetails) {
+        try {
+            Event updated = eventService.updateEvent(id, eventDetails);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EDITOR')")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        if (!eventRepository.existsById(id)) {
+    public ResponseEntity<?> deleteEvent(@PathVariable Long id) {
+        try {
+            eventService.deleteEvent(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
         }
-        eventRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
     }
 }

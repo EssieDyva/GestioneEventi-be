@@ -1,52 +1,68 @@
 package com.gestioneEventi.controllers;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gestioneEventi.dto.CreateGroupRequest;
-import com.gestioneEventi.models.User;
 import com.gestioneEventi.models.UserGroup;
-import com.gestioneEventi.repositories.UserGroupRepository;
-import com.gestioneEventi.repositories.UserRepository;
+import com.gestioneEventi.services.UserGroupService;
 
 @RestController
 @RequestMapping("/api/groups")
 public class UserGroupController {
 
     @Autowired
-    UserRepository userRepository;
+    private UserGroupService userGroupService;
 
-    @Autowired
-    UserGroupRepository userGroupRepository;
+    @GetMapping
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    public ResponseEntity<List<UserGroup>> getAllGroups() {
+        List<UserGroup> groups = userGroupService.getAllGroups();
+        return ResponseEntity.ok(groups);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    public ResponseEntity<?> getGroup(@PathVariable Long id) {
+        try {
+            UserGroup group = userGroupService.getGroupById(id);
+            return ResponseEntity.ok(group);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @PostMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<?> createGroup(@RequestBody CreateGroupRequest request) {
-        UserGroup group = new UserGroup();
-        group.setName(request.getGroupName());
-
-        // Aggiungo i membri in base alle email
-        Set<User> members = request.getMemberEmails().stream()
-                .map(email -> userRepository.findByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("Utente non trovato: " + email)))
-                .collect(Collectors.toSet());
-
-        group.setMembers(members);
-        userGroupRepository.save(group);
-
-        for (User user : members) {
-            user.setGroup(group);
-            userRepository.save(user);
+        try {
+            UserGroup group = userGroupService.createGroup(
+                    request.getGroupName(),
+                    request.getMemberEmails());
+            return ResponseEntity.ok(group);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
+    }
 
-        return ResponseEntity.ok("Gruppo creato con successo");
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> deleteGroup(@PathVariable Long id) {
+        try {
+            userGroupService.deleteGroup(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
