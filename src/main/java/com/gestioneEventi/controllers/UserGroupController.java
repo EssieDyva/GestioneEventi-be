@@ -40,8 +40,12 @@ public class UserGroupController {
                 .collect(Collectors.toSet());
 
         group.setMembers(members);
-
         userGroupRepository.save(group);
+
+        for (User user : members) {
+            user.setGroup(group);
+            userRepository.save(user);
+        }
 
         return ResponseEntity.ok("Gruppo creato con successo");
     }

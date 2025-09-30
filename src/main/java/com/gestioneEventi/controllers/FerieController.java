@@ -39,6 +39,9 @@ public class FerieController {
     public ResponseEntity<?> createFerie(@RequestBody Ferie ferie,
             @AuthenticationPrincipal User user) {
         // Recupera l'evento a cui l'utente vuole collegare la richiesta
+        if (ferie.getEvent() == null) {
+            return ResponseEntity.badRequest().body("Evento non specificato");
+        }
         Event event = eventRepository.findById(ferie.getEvent().getId())
                 .orElse(null);
 
@@ -46,11 +49,9 @@ public class FerieController {
             return ResponseEntity.badRequest().body("Evento non trovato");
         }
 
-        // Controlla se l'utente è in uno dei gruppi invitati e se l'evento è attivo
         boolean canRequest = event.getInvitedGroups().stream()
                 .anyMatch(group -> group.getMembers().contains(user)) &&
-                !LocalDate.now().isBefore(event.getStartDate()) &&
-                !LocalDate.now().isAfter(event.getEndDate());
+                LocalDate.now().isBefore(event.getStartDate());
 
         if (!canRequest) {
             return ResponseEntity.status(403).body("Non puoi richiedere ferie per questo evento");

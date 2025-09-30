@@ -3,13 +3,17 @@ package com.gestioneEventi.utils;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.gestioneEventi.models.User;
+import com.gestioneEventi.repositories.UserRepository;
 import com.gestioneEventi.services.JwtService;
 
 import io.jsonwebtoken.Claims;
@@ -20,6 +24,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private UserRepository userRepository;
 
     private final JwtService jwtService;
 
@@ -44,7 +51,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String role = claims.get("role", String.class);
 
                     GrantedAuthority authority = new SimpleGrantedAuthority(role);
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null,
+                    User user = userRepository.findByEmail(email)
+                            .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
+                            
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
                             List.of(authority));
 
                     SecurityContextHolder.getContext().setAuthentication(auth);

@@ -9,8 +9,6 @@ import com.gestioneEventi.services.JwtService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +45,7 @@ public class AuthController {
                     newUser.setEmail(email);
                     newUser.setName(decoded.getName());
 
-                    Role defaultRole = roleRepository.findByName("EMPLOYEE")
+                    Role defaultRole = roleRepository.findByName("USER")
                             .orElseThrow(() -> new RuntimeException("Ruolo non trovato"));
                     newUser.setRole(defaultRole);
 
@@ -61,15 +59,6 @@ public class AuthController {
             e.printStackTrace();
             return ResponseEntity.status(401).body("Token Firebase non valido: " + e.getMessage());
         }
-    }
-
-    @PostMapping("/dev-login")
-    public ResponseEntity<?> devLogin(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String jwt = jwtService.generateToken(user);
-        return ResponseEntity.ok(new TokenResponse(jwt));
     }
 
     public static class TokenRequest {
