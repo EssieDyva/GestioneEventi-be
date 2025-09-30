@@ -10,5 +10,5 @@ import java.util.List;
 
 @Repository
 public interface FerieRepository extends JpaRepository<Ferie, Long> {
-    List<Ferie> findByCreatedById(Long id);
+    List<Ferie> findByCreatedByEmail(String email);
 }

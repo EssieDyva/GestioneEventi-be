@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gestioneEventi.models.Event;
@@ -59,9 +61,16 @@ public class FerieController {
         return ResponseEntity.ok(ferieRepository.save(ferie));
     }
 
-    @GetMapping("/user/{id}")
-    public List<Ferie> getAllFerieByUser(@PathVariable Long id) {
-        return ferieRepository.findByCreatedById(id);
+    @GetMapping("/user/me")
+    public List<Ferie> getMyFerie(Authentication authentication) {
+        String email = authentication.getName();
+        return ferieRepository.findByCreatedByEmail(email);
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    public List<Ferie> getAllFerie() {
+        return ferieRepository.findAll();
     }
 
     @PutMapping("/{id}")
@@ -71,6 +80,16 @@ public class FerieController {
             ferie.setStartDate(ferieDetails.getStartDate());
             ferie.setEndDate(ferieDetails.getEndDate());
             return ResponseEntity.ok(ferieRepository.save(ferie));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    public ResponseEntity<?> updateFerieStatus(@PathVariable Long id, @RequestParam Status status) {
+        return ferieRepository.findById(id).map(ferie -> {
+            ferie.setStatus(status);
+            ferieRepository.save(ferie);
+            return ResponseEntity.ok(ferie);
         }).orElse(ResponseEntity.notFound().build());
     }
 
