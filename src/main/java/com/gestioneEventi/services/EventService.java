@@ -17,10 +17,12 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
+    @Transactional(readOnly = true)
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Event getEventById(Long id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Evento non trovato"));
@@ -36,9 +38,7 @@ public class EventService {
     @Transactional
     public Event updateEvent(Long id, Event eventDetails) {
         Event event = getEventById(id);
-
         validateEventDates(eventDetails);
-
         event.setTitle(eventDetails.getTitle());
         event.setStartDate(eventDetails.getStartDate());
         event.setEndDate(eventDetails.getEndDate());
@@ -59,8 +59,8 @@ public class EventService {
         if (event.getStartDate() == null || event.getEndDate() == null) {
             throw new IllegalArgumentException("Date di inizio e fine sono obbligatorie");
         }
-        if (!event.getStartDate().isBefore(event.getEndDate())) {
-            throw new IllegalArgumentException("La data di inizio deve essere precedente alla data di fine");
+        if (event.getStartDate().isAfter(event.getEndDate())) {
+            throw new IllegalArgumentException("La data di inizio deve essere precedente o uguale alla data di fine");
         }
         if (event.getStartDate().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("La data di inizio non può essere nel passato");

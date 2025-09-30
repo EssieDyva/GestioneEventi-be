@@ -2,6 +2,7 @@ package com.gestioneEventi.repositories;
 
 import com.gestioneEventi.models.Event;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,6 +11,12 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-    @EntityGraph(attributePaths = { "invitedGroups", "invitedGroups.members" })
+
+    @EntityGraph(attributePaths = { "invitedGroups", "invitedGroups.members", "createdBy", "createdBy.role" })
+    @Override
+    List<Event> findAll();
+
+    @EntityGraph(attributePaths = { "invitedGroups", "invitedGroups.members", "createdBy", "createdBy.role" })
+    @Override
     Optional<Event> findById(Long id);
 }
