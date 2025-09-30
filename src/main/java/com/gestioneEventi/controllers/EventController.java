@@ -11,7 +11,7 @@ import com.gestioneEventi.repositories.EventRepository;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/eventi")
+@RequestMapping("/api/events")
 public class EventController {
 
     @Autowired
