@@ -59,7 +59,12 @@ public class FerieController {
             return ResponseEntity.status(403).body("Non puoi richiedere ferie per questo evento");
         }
 
-        ferieService.validateFerieDates(ferie, event);
+        try {
+            ferieService.validateFerieDates(ferie, event);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+        
         ferie.setCreatedBy(user); // associa l'utente
         ferie.setStatus(Status.APPROVED); // default
         return ResponseEntity.ok(ferieRepository.save(ferie));
