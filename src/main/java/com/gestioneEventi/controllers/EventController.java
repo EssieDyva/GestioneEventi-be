@@ -42,6 +42,7 @@ public class EventController {
             event.setTitle(eventDetails.getTitle());
             event.setStartDate(eventDetails.getStartDate());
             event.setEndDate(eventDetails.getEndDate());
+            event.setInvitedGroups(eventDetails.getInvitedGroups());
             return ResponseEntity.ok(eventRepository.save(event));
         }).orElse(ResponseEntity.notFound().build());
     }

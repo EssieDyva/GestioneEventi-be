@@ -1,10 +1,12 @@
 package com.gestioneEventi.controllers;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.Ferie;
+import com.gestioneEventi.models.Status;
+import com.gestioneEventi.models.User;
+import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.FerieRepository;
 
 @RestController
@@ -23,10 +29,34 @@ public class FerieController {
 
     @Autowired
     private FerieRepository ferieRepository;
-    
+
+    @Autowired
+    private EventRepository eventRepository;
+
     @PostMapping
-    public Ferie createFerie(@RequestBody Ferie ferie) {
-        return ferieRepository.save(ferie);
+    public ResponseEntity<?> createFerie(@RequestBody Ferie ferie,
+            @AuthenticationPrincipal User user) {
+        // Recupera l'evento a cui l'utente vuole collegare la richiesta
+        Event event = eventRepository.findById(ferie.getEvent().getId())
+                .orElse(null);
+
+        if (event == null) {
+            return ResponseEntity.badRequest().body("Evento non trovato");
+        }
+
+        // Controlla se l'utente è in uno dei gruppi invitati e se l'evento è attivo
+        boolean canRequest = event.getInvitedGroups().stream()
+                .anyMatch(group -> group.getMembers().contains(user)) &&
+                !LocalDate.now().isBefore(event.getStartDate()) &&
+                !LocalDate.now().isAfter(event.getEndDate());
+
+        if (!canRequest) {
+            return ResponseEntity.status(403).body("Non puoi richiedere ferie per questo evento");
+        }
+
+        ferie.setCreatedBy(user); // associa l'utente
+        ferie.setStatus(Status.APPROVED); // default
+        return ResponseEntity.ok(ferieRepository.save(ferie));
     }
 
     @GetMapping("/user/{id}")
@@ -53,5 +83,4 @@ public class FerieController {
         ferieRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
 }

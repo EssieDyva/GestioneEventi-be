@@ -20,7 +20,11 @@ public class User {
 
     private String name;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role role;
+
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private UserGroup group;
 }

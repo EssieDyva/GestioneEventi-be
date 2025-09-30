@@ -1,6 +1,8 @@
 package com.gestioneEventi.models;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,7 +21,11 @@ public class Event {
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
-    
+
     @ManyToOne
     private User createdBy;
+
+    @ManyToMany
+    @JoinTable(name = "event_groups", joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "group_id"))
+    private Set<UserGroup> invitedGroups = new HashSet<>();
 }
