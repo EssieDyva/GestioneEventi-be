@@ -2,7 +2,6 @@ package com.gestioneEventi.controllers;
 
 import com.gestioneEventi.models.Role;
 import com.gestioneEventi.models.User;
-import com.gestioneEventi.repositories.RoleRepository;
 import com.gestioneEventi.repositories.UserRepository;
 import com.gestioneEventi.services.EmployeeDirectoryClient;
 import com.gestioneEventi.services.JwtService;
@@ -24,9 +23,6 @@ public class AuthController {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
     private JwtService jwtService;
 
     @PostMapping("/firebase")
@@ -44,11 +40,7 @@ public class AuthController {
                     User newUser = new User();
                     newUser.setEmail(email);
                     newUser.setName(decoded.getName());
-
-                    Role defaultRole = roleRepository.findByName("USER")
-                            .orElseThrow(() -> new RuntimeException("Ruolo non trovato"));
-                    newUser.setRole(defaultRole);
-
+                    newUser.setRole(Role.USER);
                     return userRepository.save(newUser);
                 });
 

@@ -17,11 +17,8 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
-
     private String name;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id")
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @ManyToOne
