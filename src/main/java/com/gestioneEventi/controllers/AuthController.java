@@ -40,9 +40,7 @@ public class AuthController {
                     User newUser = new User();
                     newUser.setEmail(email);
                     newUser.setName(decoded.getName());
-
                     newUser.setRole(Role.USER);
-
                     return userRepository.save(newUser);
                 });
 
