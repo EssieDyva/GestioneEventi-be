@@ -44,10 +44,12 @@ public class FerieService {
         return ferieRepository.save(ferie);
     }
 
+    @Transactional(readOnly = true)
     public List<Ferie> getFerieByUserEmail(String email) {
         return ferieRepository.findByCreatedByEmail(email);
     }
 
+    @Transactional(readOnly = true)
     public List<Ferie> getAllFerie() {
         return ferieRepository.findAll();
     }
@@ -87,9 +89,8 @@ public class FerieService {
     }
 
     private void validateUserCanRequestFerie(User user, Event event) {
-        // Verifica che l'utente sia in un gruppo invitato
-        boolean isInvited = event.getInvitedGroups().stream()
-                .anyMatch(group -> group.getMembers().contains(user));
+        // OTTIMIZZATO: Query singola invece di caricare gruppi e membri
+        boolean isInvited = ferieRepository.isUserInvitedToEvent(event.getId(), user.getId());
 
         if (!isInvited) {
             throw new IllegalArgumentException("Non sei invitato a questo evento");

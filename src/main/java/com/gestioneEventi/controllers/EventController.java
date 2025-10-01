@@ -1,12 +1,12 @@
 package com.gestioneEventi.controllers;
 
-import com.gestioneEventi.dto.EventDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.gestioneEventi.dto.event.EventDTO;
 import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.services.EventService;
