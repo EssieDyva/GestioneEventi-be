@@ -34,8 +34,9 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Event> getEventById(Long id) {
-        return eventRepository.findById(id);
+    public Event getEventById(Long id) {
+        return eventRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Evento", id));
     }
 
     @Transactional
@@ -81,12 +82,11 @@ public class EventService {
     }
 
     @Transactional
-    public boolean deleteEvent(Long id) {
-        if (eventRepository.existsById(id)) {
-            eventRepository.deleteById(id);
-            return true;
+    public void deleteEvent(Long id) {
+        if (!eventRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Evento", id);
         }
-        return false;
+        eventRepository.deleteById(id);
     }
 
     private void validateEventDates(Event event) {

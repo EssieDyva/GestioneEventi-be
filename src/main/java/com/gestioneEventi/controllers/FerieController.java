@@ -6,16 +6,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.gestioneEventi.dto.ferie.CreateFerieRequest;
 import com.gestioneEventi.dto.ferie.FerieDTO;
 import com.gestioneEventi.dto.ferie.UpdateFerieRequest;
+import com.gestioneEventi.models.Ferie;
 import com.gestioneEventi.models.Status;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.services.FerieService;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
 @RestController
 @RequestMapping("/api/ferie")
@@ -26,16 +29,15 @@ public class FerieController {
 
     @PostMapping
     public ResponseEntity<FerieDTO> createFerie(
-            @RequestBody CreateFerieRequest request, 
+            @Valid @RequestBody CreateFerieRequest request,
             @AuthenticationPrincipal User user) {
-        var created = ferieService.createFerie(request, user);
+        Ferie created = ferieService.createFerie(request, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(new FerieDTO(created));
     }
 
     @GetMapping("/user/me")
-    public ResponseEntity<List<FerieDTO>> getMyFerie(Authentication authentication) {
-        String email = authentication.getName();
-        List<FerieDTO> ferie = ferieService.getFerieByUserEmail(email)
+    public ResponseEntity<List<FerieDTO>> getMyFerie(@AuthenticationPrincipal User user) {
+        List<FerieDTO> ferie = ferieService.getFerieByUserEmail(user.getEmail())
                 .stream()
                 .map(FerieDTO::new)
                 .toList();
@@ -54,29 +56,25 @@ public class FerieController {
 
     @PutMapping("/{id}")
     public ResponseEntity<FerieDTO> updateFerie(
-            @PathVariable Long id, 
-            @RequestBody UpdateFerieRequest request) {
-        return ferieService.updateFerie(id, request)
-                .map(updated -> ResponseEntity.ok(new FerieDTO(updated)))
-                .orElse(ResponseEntity.notFound().build());
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody UpdateFerieRequest request) {
+        Ferie updated = ferieService.updateFerie(id, request);
+        return ResponseEntity.ok(new FerieDTO(updated));
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<FerieDTO> updateFerieStatus(
-            @PathVariable Long id, 
+            @PathVariable @Positive Long id,
             @RequestParam Status status) {
-        return ferieService.updateFerieStatus(id, status)
-                .map(updated -> ResponseEntity.ok(new FerieDTO(updated)))
-                .orElse(ResponseEntity.notFound().build());
+        Ferie updated = ferieService.updateFerieStatus(id, status);
+        return ResponseEntity.ok(new FerieDTO(updated));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EDITOR')")
-    public ResponseEntity<Void> deleteFerie(@PathVariable Long id) {
-        if (ferieService.deleteFerie(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFerie(@PathVariable @Positive Long id) {
+        ferieService.deleteFerie(id);
     }
 }
