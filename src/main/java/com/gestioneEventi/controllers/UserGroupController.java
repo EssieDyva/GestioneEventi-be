@@ -53,7 +53,7 @@ public class UserGroupController {
             UserGroup group = userGroupService.createGroup(
                     request.getGroupName(),
                     request.getMemberEmails());
-            return ResponseEntity.ok(group);
+            return ResponseEntity.ok(new UserGroupDTO(group));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
