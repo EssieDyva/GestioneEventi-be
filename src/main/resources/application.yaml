@@ -16,11 +16,19 @@ spring:
 
 server:
   port: 8080
+  # Configurazione errori personalizzati
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
 
 app:
   jwt:
     secret: ${JWT_SECRET}
     expiration: 86400000
   employee-directory:
-    url: http://localhost:8081   # esempio, backend fittizio per EmployeeDirectoryClient
+    url: http://localhost:8081
     fallback-allow-if-unreachable: true
+    cache-ttl-minutes: 10
+    cache-max-size: 10000

@@ -5,13 +5,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.gestioneEventi.models.Role;
+import com.gestioneEventi.dto.UpdateUserRoleRequest;
+import com.gestioneEventi.dto.UserDTO;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.services.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,12 +29,11 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestBody Role roleDetail) {
-        try {
-            User updated = userService.updateUserRole(id, roleDetail);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<UserDTO> updateUserRole(
+            @PathVariable Long id, 
+            @RequestBody UpdateUserRoleRequest request) {
+        return userService.updateUserRole(id, request.getRole())
+                .map(user -> ResponseEntity.ok(new UserDTO(user)))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

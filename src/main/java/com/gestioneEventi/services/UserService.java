@@ -1,5 +1,7 @@
 package com.gestioneEventi.services;
 
+import java.util.List;
+import java.util.Optional;
 
 import java.util.List;
 
@@ -26,7 +28,11 @@ public class UserService {
         User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Utente non trovato"));
 
-        user.setRole(roleDetail);
-        return userRepository.save(user);
+    @Transactional
+    public Optional<User> updateUserRole(Long id, Role role) {
+        return userRepository.findById(id).map(user -> {
+            user.setRole(role);
+            return userRepository.save(user);
+        });
     }
 }

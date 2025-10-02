@@ -1,5 +1,7 @@
-package com.gestioneEventi.dto;
+package com.gestioneEventi.dto.event;
 
+import com.gestioneEventi.dto.UserDTO;
+import com.gestioneEventi.dto.UserGroupDTO;
 import com.gestioneEventi.models.Event;
 import lombok.Data;
 
