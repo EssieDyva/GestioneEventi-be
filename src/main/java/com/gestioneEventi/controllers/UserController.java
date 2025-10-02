@@ -11,12 +11,11 @@ import com.gestioneEventi.dto.UpdateUserRoleRequest;
 import com.gestioneEventi.dto.UserDTO;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.services.UserService;
-import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
-    
+
     @Autowired
     private UserService userService;
 
@@ -30,10 +29,13 @@ public class UserController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UserDTO> updateUserRole(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestBody UpdateUserRoleRequest request) {
-        return userService.updateUserRole(id, request.getRole())
-                .map(user -> ResponseEntity.ok(new UserDTO(user)))
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            User updatedUser = userService.updateUserRole(id, request.getRole());
+            return ResponseEntity.ok(new UserDTO(updatedUser));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
