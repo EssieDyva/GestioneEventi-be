@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gestioneEventi.dto.CreateGroupRequest;
+import com.gestioneEventi.dto.UserGroupDTO;
 import com.gestioneEventi.models.UserGroup;
 import com.gestioneEventi.services.UserGroupService;
 
@@ -26,9 +27,12 @@ public class UserGroupController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
-    public ResponseEntity<List<UserGroup>> getAllGroups() {
+    public ResponseEntity<List<UserGroupDTO>> getAllGroups() {
         List<UserGroup> groups = userGroupService.getAllGroups();
-        return ResponseEntity.ok(groups);
+        List<UserGroupDTO> dtoList = groups.stream()
+                .map(UserGroupDTO::new)
+                .toList();
+        return ResponseEntity.ok(dtoList);
     }
 
     @GetMapping("/{id}")

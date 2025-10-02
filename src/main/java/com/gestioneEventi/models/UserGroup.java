@@ -3,6 +3,8 @@ package com.gestioneEventi.models;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +22,7 @@ public class UserGroup {
     private Long id;
     private String name;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "groups")
     private Set<User> members = new HashSet<>();
 }
