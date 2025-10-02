@@ -1,5 +1,6 @@
 package com.gestioneEventi.controllers;
 
+import com.gestioneEventi.dto.AuthResponse;
 import com.gestioneEventi.models.Role;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.UserRepository;
@@ -45,7 +46,7 @@ public class AuthController {
                 });
 
             String jwt = jwtService.generateToken(user);
-            return ResponseEntity.ok(new TokenResponse(jwt));
+            return ResponseEntity.ok(new AuthResponse(jwt, user));
 
         } catch (Exception e) {
             e.printStackTrace();

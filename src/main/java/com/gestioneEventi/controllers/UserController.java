@@ -11,6 +11,7 @@ import com.gestioneEventi.dto.UpdateUserRoleRequest;
 import com.gestioneEventi.dto.UserDTO;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.services.UserService;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/api/user")
