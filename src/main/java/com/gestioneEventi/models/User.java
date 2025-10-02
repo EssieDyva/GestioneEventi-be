@@ -1,5 +1,8 @@
 package com.gestioneEventi.models;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,7 +24,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @ManyToOne
-    @JoinColumn(name = "group_id")
-    private UserGroup group;
+    @ManyToMany
+    @JoinTable(name = "user_group_membership", joinColumns = @JoinColumn(name = "user_id"), 
+        inverseJoinColumns = @JoinColumn(name = "group_id"))
+    private Set<UserGroup> groups = new HashSet<>();
 }

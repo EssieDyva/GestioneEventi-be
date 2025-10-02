@@ -53,7 +53,7 @@ public class UserGroupService {
 
         // Associa gli utenti al gruppo
         final UserGroup savedGroup = group;
-        foundUsers.forEach(user -> user.setGroup(savedGroup));
+        foundUsers.forEach(user -> user.getGroups().add(savedGroup));
 
         userRepository.saveAll(foundUsers);
 
@@ -88,7 +88,7 @@ public class UserGroupService {
 
         // Rimuovi l'associazione degli utenti al gruppo
         for (User user : group.getMembers()) {
-            user.setGroup(null);
+            user.getGroups().remove(group);
         }
         userRepository.saveAll(group.getMembers());
 
