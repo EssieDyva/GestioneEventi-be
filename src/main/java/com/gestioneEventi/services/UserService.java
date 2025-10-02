@@ -3,6 +3,8 @@ package com.gestioneEventi.services;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,11 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    @Transactional
+    public User updateUserRole(Long id, Role roleDetail) {
+        User user = userRepository.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Utente non trovato"));
 
     @Transactional
     public Optional<User> updateUserRole(Long id, Role role) {

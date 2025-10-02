@@ -16,11 +16,9 @@ public class Ferie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
-
     private Status status;
     
     @ManyToOne
