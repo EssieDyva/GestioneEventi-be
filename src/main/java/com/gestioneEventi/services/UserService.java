@@ -1,5 +1,6 @@
 package com.gestioneEventi.services;
 
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,10 @@ public class UserService {
     private UserRepository userRepository;
 
     @Transactional
-    public User updateUserRole(Long id, Role roleDetail) {
-        User user = userRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Utente non trovato"));
-
-        user.setRole(roleDetail);
-        return userRepository.save(user);
+    public Optional<User> updateUserRole(Long id, Role role) {
+        return userRepository.findById(id).map(user -> {
+            user.setRole(role);
+            return userRepository.save(user);
+        });
     }
 }

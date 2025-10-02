@@ -2,14 +2,22 @@ package com.gestioneEventi.services;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gestioneEventi.dto.event.CreateEventRequest;
+import com.gestioneEventi.dto.event.UpdateEventRequest;
+import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.User;
+import com.gestioneEventi.models.UserGroup;
 import com.gestioneEventi.repositories.EventRepository;
+import com.gestioneEventi.repositories.UserGroupRepository;
 
 @Service
 public class EventService {
@@ -17,42 +25,68 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
+    @Autowired
+    private UserGroupRepository userGroupRepository;
+
     @Transactional(readOnly = true)
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
 
     @Transactional(readOnly = true)
-    public Event getEventById(Long id) {
-        return eventRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Evento non trovato"));
+    public Optional<Event> getEventById(Long id) {
+        return eventRepository.findById(id);
     }
 
     @Transactional
-    public Event createEvent(Event event, User creator) {
-        validateEventDates(event);
+    public Event createEvent(CreateEventRequest request, User creator) {
+        Event event = new Event();
+        event.setTitle(request.getTitle());
+        event.setStartDate(request.getStartDate());
+        event.setEndDate(request.getEndDate());
         event.setCreatedBy(creator);
-        return eventRepository.save(event);
-    }
-
-    @Transactional
-    public Event updateEvent(Long id, Event eventDetails) {
-        Event event = getEventById(id);
-        validateEventDates(eventDetails);
-        event.setTitle(eventDetails.getTitle());
-        event.setStartDate(eventDetails.getStartDate());
-        event.setEndDate(eventDetails.getEndDate());
-        event.setInvitedGroups(eventDetails.getInvitedGroups());
-
-        return eventRepository.save(event);
-    }
-
-    @Transactional
-    public void deleteEvent(Long id) {
-        if (!eventRepository.existsById(id)) {
-            throw new IllegalArgumentException("Evento non trovato");
+        
+        validateEventDates(event);
+        
+        if (request.getInvitedGroupIds() != null && !request.getInvitedGroupIds().isEmpty()) {
+            Set<UserGroup> groups = request.getInvitedGroupIds().stream()
+                    .map(id -> userGroupRepository.findById(id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Gruppo", id)))
+                    .collect(Collectors.toSet());
+            event.setInvitedGroups(groups);
         }
-        eventRepository.deleteById(id);
+        
+        return eventRepository.save(event);
+    }
+
+    @Transactional
+    public Optional<Event> updateEvent(Long id, UpdateEventRequest request) {
+        return eventRepository.findById(id).map(event -> {
+            event.setTitle(request.getTitle());
+            event.setStartDate(request.getStartDate());
+            event.setEndDate(request.getEndDate());
+            
+            validateEventDates(event);
+            
+            if (request.getInvitedGroupIds() != null) {
+                Set<UserGroup> groups = request.getInvitedGroupIds().stream()
+                        .map(groupId -> userGroupRepository.findById(groupId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Gruppo", groupId)))
+                        .collect(Collectors.toSet());
+                event.setInvitedGroups(groups);
+            }
+            
+            return eventRepository.save(event);
+        });
+    }
+
+    @Transactional
+    public boolean deleteEvent(Long id) {
+        if (eventRepository.existsById(id)) {
+            eventRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     private void validateEventDates(Event event) {
