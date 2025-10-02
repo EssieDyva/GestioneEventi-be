@@ -2,7 +2,6 @@ package com.gestioneEventi.services;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gestioneEventi.dto.ferie.CreateFerieRequest;
 import com.gestioneEventi.dto.ferie.UpdateFerieRequest;
+import com.gestioneEventi.exceptions.BusinessValidationException;
 import com.gestioneEventi.exceptions.InsufficientPermissionException;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
@@ -31,13 +31,20 @@ public class FerieService {
     @Transactional
     public Ferie createFerie(CreateFerieRequest request, User user) {
         if (request.getEventId() == null) {
-            throw new IllegalArgumentException("Evento non specificato");
+            throw new BusinessValidationException("Evento non specificato");
+        }
+
+        boolean canRequest = ferieRepository.canUserRequestFerieForEvent(
+                request.getEventId(),
+                user.getId());
+
+        if (!canRequest) {
+            throw new InsufficientPermissionException(
+                    "Non puoi richiedere ferie per questo evento (non invitato o evento già iniziato)");
         }
 
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", request.getEventId()));
-
-        validateUserCanRequestFerie(user, event);
 
         Ferie ferie = new Ferie();
         ferie.setTitle(request.getTitle());
@@ -63,48 +70,37 @@ public class FerieService {
     }
 
     @Transactional
-    public Optional<Ferie> updateFerie(Long id, UpdateFerieRequest request) {
-        return ferieRepository.findById(id).map(ferie -> {
-            Event event = eventRepository.findById(ferie.getEvent().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Evento associato non trovato"));
+    public Ferie updateFerie(Long id, UpdateFerieRequest request) {
+        Ferie ferie = ferieRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ferie", id));
 
-            ferie.setTitle(request.getTitle());
-            ferie.setStartDate(request.getStartDate());
-            ferie.setEndDate(request.getEndDate());
+        Event event = eventRepository.findById(ferie.getEvent().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Evento associato", ferie.getEvent().getId()));
 
-            validateFerieDates(ferie, event);
+        ferie.setTitle(request.getTitle());
+        ferie.setStartDate(request.getStartDate());
+        ferie.setEndDate(request.getEndDate());
 
-            return ferieRepository.save(ferie);
-        });
+        validateFerieDates(ferie, event);
+
+        return ferieRepository.save(ferie);
     }
 
     @Transactional
-    public Optional<Ferie> updateFerieStatus(Long id, Status status) {
-        return ferieRepository.findById(id).map(ferie -> {
-            ferie.setStatus(status);
-            return ferieRepository.save(ferie);
-        });
+    public Ferie updateFerieStatus(Long id, Status status) {
+        Ferie ferie = ferieRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ferie", id));
+
+        ferie.setStatus(status);
+        return ferieRepository.save(ferie);
     }
 
     @Transactional
-    public boolean deleteFerie(Long id) {
-        if (ferieRepository.existsById(id)) {
-            ferieRepository.deleteById(id);
-            return true;
+    public void deleteFerie(Long id) {
+        if (!ferieRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Ferie", id);
         }
-        return false;
-    }
-
-    private void validateUserCanRequestFerie(User user, Event event) {
-        boolean isInvited = ferieRepository.isUserInvitedToEvent(event.getId(), user.getId());
-
-        if (!isInvited) {
-            throw new InsufficientPermissionException("Non sei invitato a questo evento");
-        }
-
-        if (!LocalDate.now().isBefore(event.getStartDate())) {
-            throw new IllegalArgumentException("L'evento è già iniziato, non puoi più richiedere ferie");
-        }
+        ferieRepository.deleteById(id);
     }
 
     private void validateFerieDates(Ferie ferie, Event event) {

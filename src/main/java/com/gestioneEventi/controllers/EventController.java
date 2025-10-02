@@ -10,8 +10,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.services.EventService;
+
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 
@@ -24,34 +27,32 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<List<EventDTO>> getAllEvents() {
-        return ResponseEntity.ok(
-                eventService.getAllEvents()
-                        .stream()
-                        .map(EventDTO::new)
-                        .toList()
-        );
+        List<EventDTO> events = eventService.getAllEvents()
+                .stream()
+                .map(EventDTO::new)
+                .toList();
+        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventDTO> getEvent(@PathVariable Long id) {
-        return eventService.getEventById(id)
-                .map(event -> ResponseEntity.ok(new EventDTO(event)))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<EventDTO> getEvent(@PathVariable @Positive Long id) {
+        Event event = eventService.getEventById(id);
+        return ResponseEntity.ok(new EventDTO(event));
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<EventDTO> createEvent(
-            @RequestBody CreateEventRequest request, 
+            @RequestBody CreateEventRequest request,
             @AuthenticationPrincipal User user) {
-        var created = eventService.createEvent(request, user);
+        Event created = eventService.createEvent(request, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(new EventDTO(created));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<EventDTO> updateEvent(
-            @PathVariable Long id, 
+            @PathVariable @Positive Long id,
             @RequestBody UpdateEventRequest request) {
         return eventService.updateEvent(id, request)
                 .map(updated -> ResponseEntity.ok(new EventDTO(updated)))
@@ -60,10 +61,8 @@ public class EventController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EDITOR')")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        if (eventService.deleteEvent(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEvent(@PathVariable @Positive Long id) {
+        eventService.deleteEvent(id);
     }
 }

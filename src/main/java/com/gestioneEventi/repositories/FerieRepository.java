@@ -13,10 +13,6 @@ import java.util.List;
 public interface FerieRepository extends JpaRepository<Ferie, Long> {
     List<Ferie> findByCreatedByEmail(String email);
 
-    /**
-     * Verifica se un utente può richiedere ferie per un evento
-     * in una singola query invece di caricare tutti i gruppi e membri
-     */
     @Query("""
             SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END
             FROM Event e
@@ -24,6 +20,7 @@ public interface FerieRepository extends JpaRepository<Ferie, Long> {
             JOIN g.members u
             WHERE e.id = :eventId
             AND u.id = :userId
+            AND e.startDate > CURRENT_DATE
             """)
-    boolean isUserInvitedToEvent(@Param("eventId") Long eventId, @Param("userId") Long userId);
+    boolean canUserRequestFerieForEvent(@Param("eventId") Long eventId, @Param("userId") Long userId);
 }
