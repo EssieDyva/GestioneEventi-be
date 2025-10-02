@@ -1,5 +1,6 @@
 package com.gestioneEventi.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,10 @@ public class UserService {
     
     @Autowired
     private UserRepository userRepository;
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 
     @Transactional
     public Optional<User> updateUserRole(Long id, Role role) {
