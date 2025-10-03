@@ -20,10 +20,10 @@ import com.gestioneEventi.repositories.UserRepository;
 
 @Service
 public class UserGroupService {
-    
+
     @Autowired
     private UserGroupRepository userGroupRepository;
-    
+
     @Autowired
     private UserRepository userRepository;
 
@@ -88,10 +88,22 @@ public class UserGroupService {
     public Optional<UserGroup> updateGroup(Long id, UpdateGroupRequest request) {
         return userGroupRepository.findById(id).map(group -> {
             group.setName(request.getGroupName());
-            group.setMembers(new HashSet<>(request.getMemberEmails().stream()
+
+            // calcola i nuovi membri
+            Set<User> newMembers = request.getMemberEmails().stream()
                     .map(email -> userRepository.findByEmail(email)
                             .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato")))
-                    .collect(Collectors.toSet())));
+                    .collect(Collectors.toSet());
+
+            // --- RIMOZIONE ---
+            Set<User> oldMembers = new HashSet<>(group.getMembers());
+            oldMembers.forEach(user -> user.getGroups().remove(group));
+
+            // --- AGGIUNTA ---
+            newMembers.forEach(user -> user.getGroups().add(group));
+
+            group.getMembers().clear();
+            group.getMembers().addAll(newMembers);
 
             return userGroupRepository.save(group);
         });
