@@ -41,7 +41,7 @@ public class UserGroupService {
         validateGroupCreationRequest(groupName, memberEmails);
 
         // Carica tutti gli utenti
-        List<User> foundUsers = userRepository.findAllByEmailIn(memberEmails);
+        List<User> foundUsers = userRepository.findAllByEmailInWithGroups(memberEmails);
 
         // Verifica che tutti gli utenti esistano
         if (foundUsers.size() != memberEmails.size()) {

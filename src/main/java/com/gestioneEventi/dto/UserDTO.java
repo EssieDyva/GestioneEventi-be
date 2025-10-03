@@ -19,7 +19,7 @@ public class UserDTO {
         this.id = user.getId();
         this.name = user.getName();
         this.email = user.getEmail();
-        this.role = user.getRole() != null ? user.getRole() : null;
+        this.role = user.getRole();
         this.group = user.getGroups() != null
                 ? user.getGroups().stream()
                         .map(group -> group.getName())

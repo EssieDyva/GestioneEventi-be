@@ -12,7 +12,7 @@ import com.gestioneEventi.repositories.UserRepository;
 
 @Service
 public class UserService {
-    
+
     @Autowired
     private UserRepository userRepository;
 
@@ -20,10 +20,20 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<User> getAllUsersWithGroups() {
+        return userRepository.findAllWithGroups();
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> getUsersByEmailsWithGroups(List<String> emails) {
+        return userRepository.findAllByEmailInWithGroups(emails);
+    }
+
     @Transactional
     public User updateUserRole(Long id, Role roleDetail) {
         User user = userRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Utente non trovato"));
+                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato"));
         user.setRole(roleDetail);
         return userRepository.save(user);
     }

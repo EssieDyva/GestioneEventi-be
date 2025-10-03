@@ -22,9 +22,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Optional<Event> findById(Long id);
 
     @Query("""
-            SELECT e FROM event e
-            INNER JOIN event_groups eg ON e.id = eg.event_id
-            INNER JOIN users u ON eg.group_id = u.group_id
+            SELECT DISTINCT e
+            FROM Event e
+            JOIN e.invitedGroups g
+            JOIN g.members u
             WHERE u.id = :id
             """)
     List<Event> findAllByUserId(Long id);

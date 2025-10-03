@@ -21,9 +21,12 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        List<UserDTO> usersDTO = userService.getAllUsersWithGroups()
+                .stream()
+                .map(UserDTO::new)
+                .toList();
+        return ResponseEntity.ok(usersDTO);
     }
 
     @PutMapping("/{id}")

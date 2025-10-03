@@ -14,6 +14,10 @@ import com.gestioneEventi.models.User;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
-    @Query("SELECT u FROM User u WHERE u.email IN :emails")
-    List<User> findAllByEmailIn(@Param("emails") List<String> emails);
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.groups WHERE u.email IN :emails")
+    List<User> findAllByEmailInWithGroups(@Param("emails") List<String> emails);
+
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.groups")
+    List<User> findAllWithGroups();
+
 }
