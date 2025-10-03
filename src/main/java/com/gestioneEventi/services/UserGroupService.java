@@ -2,6 +2,7 @@ package com.gestioneEventi.services;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gestioneEventi.dto.UpdateGroupRequest;
 import com.gestioneEventi.exceptions.BusinessValidationException;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.User;
@@ -18,12 +20,21 @@ import com.gestioneEventi.repositories.UserRepository;
 
 @Service
 public class UserGroupService {
-
+    
     @Autowired
     private UserGroupRepository userGroupRepository;
-
+    
     @Autowired
     private UserRepository userRepository;
+
+    public List<UserGroup> getAllGroups() {
+        return userGroupRepository.findAll();
+    }
+
+    public UserGroup getGroupById(Long id) {
+        return userGroupRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Gruppo non trovato"));
+    }
 
     @Transactional
     public UserGroup createGroup(String groupName, List<String> memberEmails) {
@@ -73,13 +84,17 @@ public class UserGroupService {
         }
     }
 
-    public List<UserGroup> getAllGroups() {
-        return userGroupRepository.findAll();
-    }
+    @Transactional
+    public Optional<UserGroup> updateGroup(Long id, UpdateGroupRequest request) {
+        return userGroupRepository.findById(id).map(group -> {
+            group.setName(request.getGroupName());
+            group.setMembers(new HashSet<>(request.getMemberEmails().stream()
+                    .map(email -> userRepository.findByEmail(email)
+                            .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato")))
+                    .collect(Collectors.toSet())));
 
-    public UserGroup getGroupById(Long id) {
-        return userGroupRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Gruppo non trovato"));
+            return userGroupRepository.save(group);
+        });
     }
 
     @Transactional
