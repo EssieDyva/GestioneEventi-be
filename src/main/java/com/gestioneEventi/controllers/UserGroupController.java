@@ -72,7 +72,7 @@ public class UserGroupController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<?> deleteGroup(@PathVariable Long id) {
         try {
             userGroupService.deleteGroup(id);
