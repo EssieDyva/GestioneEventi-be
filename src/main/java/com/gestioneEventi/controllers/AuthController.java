@@ -1,6 +1,5 @@
 package com.gestioneEventi.controllers;
 
-import com.gestioneEventi.dto.AuthResponse;
 import com.gestioneEventi.dto.UserDTO;
 import com.gestioneEventi.models.Role;
 import com.gestioneEventi.models.User;
@@ -11,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,16 +38,26 @@ public class AuthController {
             }
 
             User user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    User newUser = new User();
-                    newUser.setEmail(email);
-                    newUser.setName(decoded.getName());
-                    newUser.setRole(Role.USER);
-                    return userRepository.save(newUser);
-                });
+                    .orElseGet(() -> {
+                        User newUser = new User();
+                        newUser.setEmail(email);
+                        newUser.setName(decoded.getName());
+                        newUser.setRole(Role.USER);
+                        return userRepository.save(newUser);
+                    });
 
             String jwt = jwtService.generateToken(user);
-            return ResponseEntity.ok(new AuthResponse(jwt, new UserDTO(user)));
+            ResponseCookie cookie = ResponseCookie.from("access-token", jwt)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/")
+                    .maxAge(86400)
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header("Set-Cookie", cookie.toString())
+                    .body(new UserDTO(user));
 
         } catch (Exception e) {
             e.printStackTrace();
