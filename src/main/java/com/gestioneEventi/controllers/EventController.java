@@ -25,19 +25,29 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-    @GetMapping
-    public ResponseEntity<List<EventDTO>> getAllEvents() {
-        List<EventDTO> events = eventService.getAllEvents()
-                .stream()
+    @GetMapping("/user/me")
+    public ResponseEntity<List<EventDTO>> getMyEvents(@AuthenticationPrincipal User user) {
+        List<Event> events = eventService.getUserEvents(user.getId());
+        List<EventDTO> eventDTOs = events.stream()
                 .map(EventDTO::new)
                 .toList();
-        return ResponseEntity.ok(events);
+        return ResponseEntity.ok(eventDTOs);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<EventDTO> getEvent(@PathVariable @Positive Long id) {
         Event event = eventService.getEventById(id);
         return ResponseEntity.ok(new EventDTO(event));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    public ResponseEntity<List<EventDTO>> getAllEvents() {
+        List<EventDTO> events = eventService.getAllEvents()
+                .stream()
+                .map(EventDTO::new)
+                .toList();
+        return ResponseEntity.ok(events);
     }
 
     @PostMapping

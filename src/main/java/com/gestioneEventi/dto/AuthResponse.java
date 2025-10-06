@@ -1,6 +1,5 @@
 package com.gestioneEventi.dto;
 
-import com.gestioneEventi.models.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -8,5 +7,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class AuthResponse {
     private String token;
-    private User user;
+    private UserDTO user;
 }

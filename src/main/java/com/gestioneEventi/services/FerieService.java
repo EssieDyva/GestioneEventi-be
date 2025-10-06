@@ -109,7 +109,7 @@ public class FerieService {
         if (ferie.getStartDate() == null || ferie.getEndDate() == null) {
             throw new IllegalArgumentException("Date di inizio e fine sono obbligatorie");
         }
-        if (!ferie.getStartDate().isBefore(ferie.getEndDate())) {
+        if (ferie.getStartDate().isAfter(ferie.getEndDate())) {
             throw new IllegalArgumentException("La data di inizio deve essere precedente alla data di fine");
         }
         if (ferie.getStartDate().isBefore(today) || ferie.getEndDate().isBefore(today)) {

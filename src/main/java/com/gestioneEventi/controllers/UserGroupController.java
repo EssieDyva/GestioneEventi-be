@@ -9,11 +9,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gestioneEventi.dto.CreateGroupRequest;
+import com.gestioneEventi.dto.UpdateGroupRequest;
+import com.gestioneEventi.dto.UserGroupDTO;
 import com.gestioneEventi.models.UserGroup;
 import com.gestioneEventi.services.UserGroupService;
 
@@ -26,9 +29,12 @@ public class UserGroupController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
-    public ResponseEntity<List<UserGroup>> getAllGroups() {
+    public ResponseEntity<List<UserGroupDTO>> getAllGroups() {
         List<UserGroup> groups = userGroupService.getAllGroups();
-        return ResponseEntity.ok(groups);
+        List<UserGroupDTO> dtoList = groups.stream()
+                .map(UserGroupDTO::new)
+                .toList();
+        return ResponseEntity.ok(dtoList);
     }
 
     @GetMapping("/{id}")
@@ -49,14 +55,24 @@ public class UserGroupController {
             UserGroup group = userGroupService.createGroup(
                     request.getGroupName(),
                     request.getMemberEmails());
-            return ResponseEntity.ok(group);
+            return ResponseEntity.ok(new UserGroupDTO(group));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    public ResponseEntity<UserGroupDTO> updateGroup(
+            @PathVariable Long id,
+            @RequestBody UpdateGroupRequest request) {
+        return userGroupService.updateGroup(id, request)
+                .map(updated -> ResponseEntity.ok(new UserGroupDTO(updated)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<?> deleteGroup(@PathVariable Long id) {
         try {
             userGroupService.deleteGroup(id);

@@ -2,6 +2,7 @@ package com.gestioneEventi.services;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gestioneEventi.dto.UpdateGroupRequest;
 import com.gestioneEventi.exceptions.BusinessValidationException;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.User;
@@ -25,12 +27,21 @@ public class UserGroupService {
     @Autowired
     private UserRepository userRepository;
 
+    public List<UserGroup> getAllGroups() {
+        return userGroupRepository.findAll();
+    }
+
+    public UserGroup getGroupById(Long id) {
+        return userGroupRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Gruppo non trovato"));
+    }
+
     @Transactional
     public UserGroup createGroup(String groupName, List<String> memberEmails) {
         validateGroupCreationRequest(groupName, memberEmails);
 
         // Carica tutti gli utenti
-        List<User> foundUsers = userRepository.findAllByEmailIn(memberEmails);
+        List<User> foundUsers = userRepository.findAllByEmailInWithGroups(memberEmails);
 
         // Verifica che tutti gli utenti esistano
         if (foundUsers.size() != memberEmails.size()) {
@@ -53,7 +64,7 @@ public class UserGroupService {
 
         // Associa gli utenti al gruppo
         final UserGroup savedGroup = group;
-        foundUsers.forEach(user -> user.setGroup(savedGroup));
+        foundUsers.forEach(user -> user.getGroups().add(savedGroup));
 
         userRepository.saveAll(foundUsers);
 
@@ -73,13 +84,29 @@ public class UserGroupService {
         }
     }
 
-    public List<UserGroup> getAllGroups() {
-        return userGroupRepository.findAll();
-    }
+    @Transactional
+    public Optional<UserGroup> updateGroup(Long id, UpdateGroupRequest request) {
+        return userGroupRepository.findById(id).map(group -> {
+            group.setName(request.getGroupName());
 
-    public UserGroup getGroupById(Long id) {
-        return userGroupRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Gruppo non trovato"));
+            // calcola i nuovi membri
+            Set<User> newMembers = request.getMemberEmails().stream()
+                    .map(email -> userRepository.findByEmail(email)
+                            .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato")))
+                    .collect(Collectors.toSet());
+
+            // --- RIMOZIONE ---
+            Set<User> oldMembers = new HashSet<>(group.getMembers());
+            oldMembers.forEach(user -> user.getGroups().remove(group));
+
+            // --- AGGIUNTA ---
+            newMembers.forEach(user -> user.getGroups().add(group));
+
+            group.getMembers().clear();
+            group.getMembers().addAll(newMembers);
+
+            return userGroupRepository.save(group);
+        });
     }
 
     @Transactional
@@ -88,7 +115,7 @@ public class UserGroupService {
 
         // Rimuovi l'associazione degli utenti al gruppo
         for (User user : group.getMembers()) {
-            user.setGroup(null);
+            user.getGroups().remove(group);
         }
         userRepository.saveAll(group.getMembers());
 

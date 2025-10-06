@@ -34,6 +34,11 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
+    public List<Event> getUserEvents(Long id) {
+        return eventRepository.findAllByUserId(id);
+    }
+
+    @Transactional(readOnly = true)
     public Event getEventById(Long id) {
         return eventRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Evento", id));
