@@ -10,8 +10,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,7 +30,7 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    @PostMapping("/firebase")
+    @PostMapping("/login")
     public ResponseEntity<?> authenticate(@RequestBody TokenRequest request) {
         try {
             FirebaseToken decoded = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
@@ -47,22 +50,29 @@ public class AuthController {
                     });
 
             String jwt = jwtService.generateToken(user);
-            ResponseCookie cookie = ResponseCookie.from("access-token", jwt)
+            ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)
                     .sameSite("Strict")
                     .path("/")
                     .maxAge(86400)
                     .build();
 
             return ResponseEntity.ok()
-                    .header("Set-Cookie", cookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(new UserDTO(user));
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(401).body("Token Firebase non valido: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails user) {
+        if (user == null)
+            return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(new UserDTO((User) user));
     }
 
     public static class TokenRequest {
