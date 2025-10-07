@@ -35,7 +35,7 @@ public class FerieController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new FerieDTO(created));
     }
 
-    @GetMapping("/user/me")
+    @GetMapping("/me")
     public ResponseEntity<List<FerieDTO>> getMyFerie(@AuthenticationPrincipal User user) {
         List<FerieDTO> ferie = ferieService.getFerieByUserEmail(user.getEmail())
                 .stream()

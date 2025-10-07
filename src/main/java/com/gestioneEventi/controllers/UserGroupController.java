@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gestioneEventi.dto.CreateGroupRequest;
 import com.gestioneEventi.dto.UpdateGroupRequest;
 import com.gestioneEventi.dto.UserGroupDTO;
+import com.gestioneEventi.models.User;
 import com.gestioneEventi.models.UserGroup;
 import com.gestioneEventi.services.UserGroupService;
 
@@ -26,6 +28,15 @@ public class UserGroupController {
 
     @Autowired
     private UserGroupService userGroupService;
+
+    @GetMapping("/me")
+    public ResponseEntity<List<UserGroupDTO>> getMyGroups(@AuthenticationPrincipal User user) {
+        List<UserGroupDTO> groups = userGroupService.getMyGroups(user.getId())
+        .stream()
+        .map(UserGroupDTO::new)
+        .toList();
+        return ResponseEntity.ok(groups);
+    }
 
     @GetMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
