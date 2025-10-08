@@ -22,6 +22,8 @@ public class Event {
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
+
+    @Enumerated(EnumType.STRING)
     private EventType eventType;
 
     @ManyToOne

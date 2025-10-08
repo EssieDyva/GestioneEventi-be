@@ -14,7 +14,6 @@ import com.gestioneEventi.dto.event.CreateEventRequest;
 import com.gestioneEventi.dto.event.UpdateEventRequest;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
-
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.UserRepository;
@@ -51,9 +50,10 @@ public class EventService {
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
         event.setCreatedBy(creator);
+        event.setEventType(request.getEventType());
 
         validateEventDates(event);
-
+        
         if (request.getInvitedUserIds() != null && !request.getInvitedUserIds().isEmpty()) {
             Set<User> users = request.getInvitedUserIds().stream()
                     .map(id -> userRepository.findById(id)
