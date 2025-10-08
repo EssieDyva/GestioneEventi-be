@@ -57,7 +57,7 @@ public class EventService {
         if (request.getInvitedUserIds() != null && !request.getInvitedUserIds().isEmpty()) {
             Set<User> users = request.getInvitedUserIds().stream()
                     .map(id -> userRepository.findById(id)
-                            .orElseThrow(() -> new ResourceNotFoundException("Gruppo", id)))
+                            .orElseThrow(() -> new ResourceNotFoundException("Utente", id)))
                     .collect(Collectors.toSet());
             event.setInvitedUsers(users);
         }
