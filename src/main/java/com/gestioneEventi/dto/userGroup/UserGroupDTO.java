@@ -1,4 +1,4 @@
-package com.gestioneEventi.dto;
+package com.gestioneEventi.dto.userGroup;
 
 import java.util.Set;
 import java.util.stream.Collectors;

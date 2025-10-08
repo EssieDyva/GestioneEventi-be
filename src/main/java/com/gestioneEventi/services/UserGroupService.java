@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gestioneEventi.dto.UpdateGroupRequest;
+import com.gestioneEventi.dto.userGroup.UpdateGroupRequest;
 import com.gestioneEventi.exceptions.BusinessValidationException;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.User;
