@@ -27,6 +27,10 @@ public class UserGroupService {
     @Autowired
     private UserRepository userRepository;
 
+    public List<UserGroup> getMyGroups(Long id) {
+        return userGroupRepository.findAllByUserId(id);
+    }
+
     public List<UserGroup> getAllGroups() {
         return userGroupRepository.findAll();
     }

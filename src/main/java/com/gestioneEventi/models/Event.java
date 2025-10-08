@@ -23,11 +23,14 @@ public class Event {
     private LocalDate startDate;
     private LocalDate endDate;
 
+    @Enumerated(EnumType.STRING)
+    private EventType eventType;
+
     @ManyToOne
     private User createdBy;
 
     @ManyToMany
     @JsonIgnore
-    @JoinTable(name = "event_groups", joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "group_id"))
-    private Set<UserGroup> invitedGroups = new HashSet<>();
+    @JoinTable(name = "event_users", joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<User> invitedUsers = new HashSet<>();
 }

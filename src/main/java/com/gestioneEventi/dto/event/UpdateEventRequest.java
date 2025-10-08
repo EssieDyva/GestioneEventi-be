@@ -10,5 +10,5 @@ public class UpdateEventRequest {
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Set<Long> invitedGroupIds;
+    private Set<Long> invitedUserIds;
 }
