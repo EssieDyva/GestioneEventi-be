@@ -1,8 +1,9 @@
 package com.gestioneEventi.dto.event;
 
 import com.gestioneEventi.dto.UserDTO;
-import com.gestioneEventi.dto.UserGroupDTO;
 import com.gestioneEventi.models.Event;
+import com.gestioneEventi.models.EventType;
+
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -15,17 +16,19 @@ public class EventDTO {
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
+    private EventType eventType;
     private UserDTO createdBy;
-    private List<UserGroupDTO> invitedGroups;
+    private List<UserDTO> invitedUsers;
 
     public EventDTO(Event event) {
         this.id = event.getId();
         this.title = event.getTitle();
         this.startDate = event.getStartDate();
         this.endDate = event.getEndDate();
+        this.eventType = event.getEventType();
         this.createdBy = event.getCreatedBy() != null ? new UserDTO(event.getCreatedBy()) : null;
-        this.invitedGroups = event.getInvitedGroups().stream()
-                .map(UserGroupDTO::new)
+        this.invitedUsers = event.getInvitedUsers().stream()
+                .map(UserDTO::new)
                 .collect(Collectors.toList());
     }
 }

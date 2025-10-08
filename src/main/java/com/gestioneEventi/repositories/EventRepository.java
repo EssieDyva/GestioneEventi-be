@@ -25,9 +25,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
                 SELECT DISTINCT e
                 FROM Event e
-                JOIN e.invitedGroups g
-                JOIN g.members u
-                WHERE u.id = :id
+                JOIN e.invitedUsers iu
+                WHERE iu.id = :id
             """)
     List<Event> findAllByUserId(@Param("id") Long id);
 }

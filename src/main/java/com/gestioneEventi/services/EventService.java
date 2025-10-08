@@ -14,10 +14,10 @@ import com.gestioneEventi.dto.event.CreateEventRequest;
 import com.gestioneEventi.dto.event.UpdateEventRequest;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
+
 import com.gestioneEventi.models.User;
-import com.gestioneEventi.models.UserGroup;
 import com.gestioneEventi.repositories.EventRepository;
-import com.gestioneEventi.repositories.UserGroupRepository;
+import com.gestioneEventi.repositories.UserRepository;
 
 @Service
 public class EventService {
@@ -26,7 +26,7 @@ public class EventService {
     private EventRepository eventRepository;
 
     @Autowired
-    private UserGroupRepository userGroupRepository;
+    private UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public List<Event> getAllEvents() {
@@ -41,7 +41,7 @@ public class EventService {
     @Transactional(readOnly = true)
     public Event getEventById(Long id) {
         return eventRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Evento", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Evento", id));
     }
 
     @Transactional
@@ -51,17 +51,17 @@ public class EventService {
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
         event.setCreatedBy(creator);
-        
+
         validateEventDates(event);
-        
-        if (request.getInvitedGroupIds() != null && !request.getInvitedGroupIds().isEmpty()) {
-            Set<UserGroup> groups = request.getInvitedGroupIds().stream()
-                    .map(id -> userGroupRepository.findById(id)
+
+        if (request.getInvitedUserIds() != null && !request.getInvitedUserIds().isEmpty()) {
+            Set<User> users = request.getInvitedUserIds().stream()
+                    .map(id -> userRepository.findById(id)
                             .orElseThrow(() -> new ResourceNotFoundException("Gruppo", id)))
                     .collect(Collectors.toSet());
-            event.setInvitedGroups(groups);
+            event.setInvitedUsers(users);
         }
-        
+
         return eventRepository.save(event);
     }
 
@@ -71,17 +71,16 @@ public class EventService {
             event.setTitle(request.getTitle());
             event.setStartDate(request.getStartDate());
             event.setEndDate(request.getEndDate());
-            
+
             validateEventDates(event);
-            
-            if (request.getInvitedGroupIds() != null) {
-                Set<UserGroup> groups = request.getInvitedGroupIds().stream()
-                        .map(groupId -> userGroupRepository.findById(groupId)
+
+            if (request.getInvitedUserIds() != null) {
+                Set<User> users = request.getInvitedUserIds().stream()
+                        .map(groupId -> userRepository.findById(groupId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Gruppo", groupId)))
                         .collect(Collectors.toSet());
-                event.setInvitedGroups(groups);
+                event.setInvitedUsers(users);
             }
-            
             return eventRepository.save(event);
         });
     }
