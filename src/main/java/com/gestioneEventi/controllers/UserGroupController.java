@@ -32,9 +32,9 @@ public class UserGroupController {
     @GetMapping("/me")
     public ResponseEntity<List<UserGroupDTO>> getMyGroups(@AuthenticationPrincipal User user) {
         List<UserGroupDTO> groups = userGroupService.getMyGroups(user.getId())
-        .stream()
-        .map(UserGroupDTO::new)
-        .toList();
+                .stream()
+                .map(UserGroupDTO::new)
+                .toList();
         return ResponseEntity.ok(groups);
     }
 
