@@ -25,7 +25,7 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-    @GetMapping("/user/me")
+    @GetMapping("/me")
     public ResponseEntity<List<EventDTO>> getMyEvents(@AuthenticationPrincipal User user) {
         List<Event> events = eventService.getUserEvents(user.getId());
         List<EventDTO> eventDTOs = events.stream()
