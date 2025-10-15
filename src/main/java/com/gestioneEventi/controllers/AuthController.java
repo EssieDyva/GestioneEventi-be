@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +35,7 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody TokenRequest request) {
+    public ResponseEntity<?> authenticate(@RequestBody TokenRequest request, HttpServletResponse response) {
         try {
             FirebaseToken decoded = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
             String email = decoded.getEmail();
@@ -54,7 +56,15 @@ public class AuthController {
             String accessToken = jwtService.generateAccessToken(user);
             String refreshToken = jwtService.generateRefreshToken(user);
 
-            return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken, new UserDTO(user)));
+            Cookie cookie = new Cookie("refreshToken", refreshToken);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(true);
+            cookie.setPath("/auth/refresh");
+            cookie.setMaxAge(7 * 24 * 60 * 60);
+            response.addCookie(cookie);
+            response.setHeader("Set-Cookie", String.format("%s; %s", cookie.toString(), "SameSite=Strict"));
+
+            return ResponseEntity.ok(new AuthResponse(accessToken, new UserDTO(user)));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -80,7 +90,7 @@ public class AuthController {
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
 
         String newAccessToken = jwtService.generateAccessToken(user);
-        return ResponseEntity.ok(new AuthResponse(newAccessToken, refreshToken, new UserDTO(user)));
+        return ResponseEntity.ok(new AuthResponse(newAccessToken, new UserDTO(user)));
     }
 
     @GetMapping("/me")
