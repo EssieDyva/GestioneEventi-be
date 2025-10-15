@@ -1,5 +1,6 @@
 package com.gestioneEventi.controllers;
 
+import com.gestioneEventi.dto.AuthResponse;
 import com.gestioneEventi.dto.UserDTO;
 import com.gestioneEventi.models.Role;
 import com.gestioneEventi.models.User;
@@ -9,12 +10,13 @@ import com.gestioneEventi.services.JwtService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 
+import io.jsonwebtoken.Claims;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -49,23 +51,36 @@ public class AuthController {
                         return userRepository.save(newUser);
                     });
 
-            String jwt = jwtService.generateToken(user);
-            ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
-                    .httpOnly(true)
-                    .secure(false)
-                    .sameSite("Strict")
-                    .path("/")
-                    .maxAge(86400)
-                    .build();
+            String accessToken = jwtService.generateAccessToken(user);
+            String refreshToken = jwtService.generateRefreshToken(user);
 
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(new UserDTO(user));
+            return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken, new UserDTO(user)));
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(401).body("Token Firebase non valido: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody TokenRequest request) {
+        String refreshToken = request.getIdToken();
+
+        if (!jwtService.isTokenValid(refreshToken)) {
+            return ResponseEntity.status(401).body("Invalid refresh token");
+        }
+
+        Claims claims = jwtService.parseToken(refreshToken).getPayload();
+        if (!"refresh".equals(claims.get("type", String.class))) {
+            return ResponseEntity.status(400).body("Token is not a refresh token");
+        }
+
+        String email = claims.getSubject();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
+
+        String newAccessToken = jwtService.generateAccessToken(user);
+        return ResponseEntity.ok(new AuthResponse(newAccessToken, refreshToken, new UserDTO(user)));
     }
 
     @GetMapping("/me")
