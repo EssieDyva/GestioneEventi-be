@@ -10,12 +10,20 @@ import com.gestioneEventi.services.JwtService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Autenticazione", description = "API per l'autenticazione tramite Firebase")
 public class AuthController {
 
     @Autowired
@@ -28,7 +36,26 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/firebase")
-    public ResponseEntity<?> authenticate(@RequestBody TokenRequest request) {
+    @Operation(
+        summary = "Autenticazione Firebase",
+        description = "Autentica l'utente tramite token Firebase e restituisce un JWT per le API"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Autenticazione riuscita",
+            content = @Content(schema = @Schema(implementation = AuthResponse.class))
+        ),
+        @ApiResponse(responseCode = "401", description = "Token Firebase non valido", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Accesso negato: utente non nel directory aziendale", content = @Content)
+    })
+    public ResponseEntity<?> authenticate(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "Token ID Firebase",
+                required = true,
+                content = @Content(schema = @Schema(implementation = TokenRequest.class))
+            )
+            @RequestBody TokenRequest request) {
         try {
             FirebaseToken decoded = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
             String email = decoded.getEmail();
@@ -55,7 +82,9 @@ public class AuthController {
         }
     }
 
+    @Schema(description = "Richiesta di autenticazione con token Firebase")
     public static class TokenRequest {
+        @Schema(description = "Token ID ottenuto da Firebase Authentication", example = "eyJhbGciOiJSUzI1NiIsImtpZCI6...")
         private String idToken;
 
         public String getIdToken() {
@@ -67,7 +96,9 @@ public class AuthController {
         }
     }
 
+    @Schema(description = "Risposta con token JWT")
     public static class TokenResponse {
+        @Schema(description = "Token JWT per le API", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
         private String token;
 
         public TokenResponse(String token) {
