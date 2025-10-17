@@ -35,52 +35,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-protected void doFilterInternal(HttpServletRequest request,
-                                HttpServletResponse response,
-                                FilterChain filterChain)
-        throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
 
-    String token = null;
+        String token = null;
 
-    // 1️⃣ prova a leggere dall'header Authorization
-    String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-    }
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
 
-    // 2️⃣ se non c'è, prova a leggerlo dal cookie "access_token"
-    if (token == null && request.getCookies() != null) {
-        for (Cookie cookie : request.getCookies()) {
-            if ("access_token".equals(cookie.getName())) {
-                token = cookie.getValue();
-                break;
+        if (token == null && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
             }
         }
-    }
 
-    // 3️⃣ se abbiamo trovato un token valido → autentichiamo
-    if (token != null) {
-        try {
-            if (jwtService.isTokenValid(token)) {
-                Claims claims = jwtService.parseToken(token).getPayload();
-                String email = claims.getSubject();
-                String role = claims.get("role", String.class);
+        if (token != null) {
+            try {
+                if (jwtService.isTokenValid(token)) {
+                    Claims claims = jwtService.parseToken(token).getPayload();
+                    String email = claims.getSubject();
+                    String role = claims.get("role", String.class);
 
-                GrantedAuthority authority = new SimpleGrantedAuthority(role);
-                User user = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
+                    GrantedAuthority authority = new SimpleGrantedAuthority(role);
+                    User user = userRepository.findByEmail(email)
+                            .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
 
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(user, null, List.of(authority));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
+                            List.of(authority));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            } catch (JwtException ex) {
             }
-        } catch (JwtException ex) {
-            // token invalido → ignora, non bloccare
         }
+        filterChain.doFilter(request, response);
     }
-
-    // 4️⃣ prosegui con la catena dei filtri
-    filterChain.doFilter(request, response);
-}
-
 }

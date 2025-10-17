@@ -49,7 +49,7 @@ public class JwtService {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(user.getEmail())
-                .claim("type", "refresh") // per distinguerlo
+                .claim("type", "refresh")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(refreshExpiration)))
                 .signWith(key)
