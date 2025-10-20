@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseToken;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,11 +59,11 @@ public class AuthController {
 
             Cookie cookie = new Cookie("refreshToken", refreshToken);
             cookie.setHttpOnly(true);
-            cookie.setSecure(true);
+            cookie.setSecure(false);
             cookie.setPath("/auth/refresh");
             cookie.setMaxAge(7 * 24 * 60 * 60);
-            response.addCookie(cookie);
-            response.setHeader("Set-Cookie", String.format("%s; %s", cookie.toString(), "SameSite=Strict"));
+            // response.addCookie(cookie);
+            response.setHeader("Set-Cookie", String.format("%s; %s", cookie.toString(), "SameSite=None"));
 
             return ResponseEntity.ok(new AuthResponse(accessToken, new UserDTO(user)));
 
@@ -73,10 +74,21 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@RequestBody TokenRequest request) {
-        String refreshToken = request.getIdToken();
+    public ResponseEntity<?> refresh(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return ResponseEntity.status(401).body("Refresh token mancante");
+        }
 
-        if (!jwtService.isTokenValid(refreshToken)) {
+        String refreshToken = null;
+        for (Cookie cookie : cookies) {
+            if ("refreshToken".equals(cookie.getName())) {
+                refreshToken = cookie.getValue();
+                break;
+            }
+        }
+
+        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }
 
