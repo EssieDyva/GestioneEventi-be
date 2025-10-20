@@ -34,7 +34,7 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    @PostMapping("/login")
+    @PostMapping("/firebase")
     public ResponseEntity<?> authenticate(@RequestBody TokenRequest request, HttpServletResponse response) {
         try {
             FirebaseToken decoded = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
