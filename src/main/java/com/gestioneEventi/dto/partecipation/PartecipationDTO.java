@@ -4,13 +4,27 @@ import com.gestioneEventi.dto.UserDTO;
 import com.gestioneEventi.dto.event.EventDTO;
 import com.gestioneEventi.models.Partecipation;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "Dettagli di una partecipazione ad un evento")
 public class PartecipationDTO {
+    
+    @Schema(description = "ID univoco della partecipazione", example = "1")
     private Long id;
+    
+    @Schema(
+        description = "Stato di accettazione dell'evento da parte dell'utente", 
+        example = "true",
+        nullable = true
+    )
     private Boolean isEventAccepted;
+    
+    @Schema(description = "Evento associato alla partecipazione")
     private EventDTO event;
+    
+    @Schema(description = "Utente partecipante")
     private UserDTO user;
 
     public PartecipationDTO(Partecipation partecipation) {
