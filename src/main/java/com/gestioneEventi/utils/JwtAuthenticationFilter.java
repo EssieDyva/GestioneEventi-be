@@ -19,6 +19,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -39,10 +40,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String token = null;
 
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+            token = authHeader.substring(7);
+        }
+
+        if (token == null && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token != null) {
             try {
                 if (jwtService.isTokenValid(token)) {
                     Claims claims = jwtService.parseToken(token).getPayload();
@@ -52,17 +66,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     GrantedAuthority authority = new SimpleGrantedAuthority(role);
                     User user = userRepository.findByEmail(email)
                             .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
-                            
+
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
                             List.of(authority));
-
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             } catch (JwtException ex) {
-                // Token invalido → ignora, utente rimane anonimo
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }

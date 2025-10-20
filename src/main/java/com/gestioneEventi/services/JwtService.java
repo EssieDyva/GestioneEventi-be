@@ -21,22 +21,37 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
     private final SecretKey key;
-    private final Duration expiration;
+    private final Duration accessExpiration;
+    private final Duration refreshExpiration;
 
-    public JwtService(@Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration}") long expMillis) {
+    public JwtService(
+            @Value("${app.jwt.secret}") String secret,
+            @Value("${app.jwt.access-expiration}") long accessExpMillis,
+            @Value("${app.jwt.refresh-expiration}") long refreshExpMillis) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expiration = Duration.ofMillis(expMillis);
+        this.accessExpiration = Duration.ofMillis(accessExpMillis);
+        this.refreshExpiration = Duration.ofMillis(refreshExpMillis);
     }
 
-    public String generateToken(User user) {
+    public String generateAccessToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("uid", user.getId())
                 .claim("role", user.getRole())
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(expiration)))
+                .expiration(Date.from(now.plus(accessExpiration)))
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateRefreshToken(User user) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(user.getEmail())
+                .claim("type", "refresh")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(refreshExpiration)))
                 .signWith(key)
                 .compact();
     }

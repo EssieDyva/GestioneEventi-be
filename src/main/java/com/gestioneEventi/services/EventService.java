@@ -1,6 +1,7 @@
 package com.gestioneEventi.services;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +15,7 @@ import com.gestioneEventi.dto.event.CreateEventRequest;
 import com.gestioneEventi.dto.event.UpdateEventRequest;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
+import com.gestioneEventi.models.EventType;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.UserRepository;
@@ -26,6 +28,9 @@ public class EventService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PartecipationService partecipationService;
 
     @Transactional(readOnly = true)
     public List<Event> getAllEvents() {
@@ -50,10 +55,15 @@ public class EventService {
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
         event.setCreatedBy(creator);
-        event.setEventType(request.getEventType());
+
+        if (request.getEventType() == null) {
+            event.setEventType(EventType.FERIE);
+        } else {
+            event.setEventType(request.getEventType());
+        }
 
         validateEventDates(event);
-        
+
         if (request.getInvitedUserIds() != null && !request.getInvitedUserIds().isEmpty()) {
             Set<User> users = request.getInvitedUserIds().stream()
                     .map(id -> userRepository.findById(id)
@@ -62,7 +72,14 @@ public class EventService {
             event.setInvitedUsers(users);
         }
 
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+
+        if (savedEvent.getEventType() == EventType.GENERICO) {
+            partecipationService.createPartecipation(savedEvent.getId(),
+                    savedEvent.getInvitedUsers().stream().map(User::getId).toList());
+        }
+
+        return savedEvent;
     }
 
     @Transactional
@@ -71,16 +88,27 @@ public class EventService {
             event.setTitle(request.getTitle());
             event.setStartDate(request.getStartDate());
             event.setEndDate(request.getEndDate());
-
             validateEventDates(event);
 
+            Set<User> oldInvited = new HashSet<>(event.getInvitedUsers());
+
             if (request.getInvitedUserIds() != null) {
-                Set<User> users = request.getInvitedUserIds().stream()
-                        .map(groupId -> userRepository.findById(groupId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Gruppo", groupId)))
+                Set<User> newInvited = request.getInvitedUserIds().stream()
+                        .map(userId -> userRepository.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Utente", userId)))
                         .collect(Collectors.toSet());
-                event.setInvitedUsers(users);
+                event.setInvitedUsers(newInvited);
+
+                Set<User> newlyAdded = new HashSet<>(newInvited);
+                newlyAdded.removeAll(oldInvited);
+
+                if (!newlyAdded.isEmpty() &&
+                        (event.getEventType() == EventType.GENERICO)) {
+                    partecipationService.createPartecipation(event.getId(),
+                            newlyAdded.stream().map(User::getId).toList());
+                }
             }
+
             return eventRepository.save(event);
         });
     }

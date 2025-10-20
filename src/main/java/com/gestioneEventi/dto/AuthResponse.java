@@ -10,7 +10,7 @@ import lombok.Data;
 public class AuthResponse {
     
     @Schema(description = "Token JWT per l'autenticazione alle API", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-    private String token;
+    private String accessToken;
     
     @Schema(description = "Dati dell'utente autenticato")
     private UserDTO user;

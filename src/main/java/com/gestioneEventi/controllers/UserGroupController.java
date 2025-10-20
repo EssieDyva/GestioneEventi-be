@@ -24,9 +24,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gestioneEventi.dto.CreateGroupRequest;
-import com.gestioneEventi.dto.UpdateGroupRequest;
-import com.gestioneEventi.dto.UserGroupDTO;
+import com.gestioneEventi.dto.userGroup.CreateGroupRequest;
+import com.gestioneEventi.dto.userGroup.UpdateGroupRequest;
+import com.gestioneEventi.dto.userGroup.UserGroupDTO;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.models.UserGroup;
 import com.gestioneEventi.services.UserGroupService;
