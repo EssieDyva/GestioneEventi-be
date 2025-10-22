@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/ferie/**").authenticated()
                         .requestMatchers("/api/groups/**").authenticated()
                         .requestMatchers("/api/user/**").authenticated()
+                        .requestMatchers("/api/partecipation/**").authenticated()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -1,6 +1,9 @@
 package com.gestioneEventi.services;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,22 +36,36 @@ public class PartecipationService {
     public List<Partecipation> createPartecipation(CreatePartecipation request) {
         if (request.getEventId() == null)
             throw new BusinessValidationException("Evento non specificato");
+        List<Long> requestedIds = Optional.ofNullable(request.getUserIds()).orElse(List.of());
+        if (requestedIds.isEmpty())
+            throw new BusinessValidationException("Nessun utente specificato");
 
-        List<User> foundUsers = userRepository.findAllById(request.getUserIds());
+        List<Long> uniqueIds = requestedIds.stream().distinct().toList();
+        List<User> foundUsers = userRepository.findAllById(uniqueIds);
+        Set<Long> foundIds = foundUsers.stream().map(User::getId).collect(Collectors.toSet());
+        List<Long> missing = uniqueIds.stream().filter(id -> !foundIds.contains(id)).toList();
+        if (!missing.isEmpty()) {
+            throw new BusinessValidationException("Utenti non trovati: " + missing);
+        }
+
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", request.getEventId()));
 
-        List<Partecipation> partecipations = foundUsers.stream()
+        List<Partecipation> existing = partecipationRepository.findByEventIdAndUserIdIn(event.getId(), uniqueIds);
+        Set<Long> alreadyJoinedUserIds = existing.stream().map(p -> p.getUser().getId()).collect(Collectors.toSet());
+
+        List<Partecipation> toCreate = foundUsers.stream()
+                .filter(u -> !alreadyJoinedUserIds.contains(u.getId()))
                 .map(user -> {
                     Partecipation p = new Partecipation();
-                    p.setIsEventAccepted(null);
+                    p.setIsEventAccepted(false);
                     p.setEvent(event);
                     p.setUser(user);
                     return p;
                 })
                 .toList();
 
-        return partecipationRepository.saveAll(partecipations);
+        return partecipationRepository.saveAll(toCreate);
     }
 
     @Transactional
@@ -67,5 +84,29 @@ public class PartecipationService {
         partecipation.setIsEventAccepted(request.getIsEventAccepted());
 
         return partecipationRepository.save(partecipation);
+    }
+
+    public List<Partecipation> getAllPartecipations() {
+        return partecipationRepository.findAll();
+    }
+
+    public List<Partecipation> getPartecipationsByEventId(Long eventId) {
+        return partecipationRepository.findAll().stream()
+                .filter(p -> p.getEvent() != null && p.getEvent().getId().equals(eventId))
+                .toList();
+    }
+
+    public List<Partecipation> getPartecipationsByUserId(Long userId) {
+        return partecipationRepository.findAll().stream()
+                .filter(p -> p.getUser() != null && p.getUser().getId().equals(userId))
+                .toList();
+    }
+
+    @Transactional
+    public void deletePartecipation(Long id) {
+        if (!partecipationRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Partecipazione", id);
+        }
+        partecipationRepository.deleteById(id);
     }
 }
