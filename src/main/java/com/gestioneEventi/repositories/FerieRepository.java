@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.Ferie;
 
 import java.util.List;
@@ -22,4 +23,6 @@ public interface FerieRepository extends JpaRepository<Ferie, Long> {
             AND e.startDate > CURRENT_DATE
             """)
     boolean canUserRequestFerieForEvent(@Param("eventId") Long eventId, @Param("userId") Long userId);
+
+    void deleteAllByEvent(Event event);
 }

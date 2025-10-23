@@ -18,6 +18,7 @@ import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.EventType;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
+import com.gestioneEventi.repositories.FerieRepository;
 import com.gestioneEventi.repositories.UserRepository;
 
 @Service
@@ -28,6 +29,9 @@ public class EventService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private FerieRepository ferieRepository;
 
     @Autowired
     private PartecipationService partecipationService;
@@ -115,10 +119,11 @@ public class EventService {
 
     @Transactional
     public void deleteEvent(Long id) {
-        if (!eventRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Evento", id);
-        }
-        eventRepository.deleteById(id);
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento", id));
+
+        ferieRepository.deleteAllByEvent(event);
+        eventRepository.delete(event);
     }
 
     private void validateEventDates(Event event) {
