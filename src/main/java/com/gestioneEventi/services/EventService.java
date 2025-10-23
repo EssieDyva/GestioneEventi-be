@@ -19,6 +19,7 @@ import com.gestioneEventi.models.EventType;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.FerieRepository;
+import com.gestioneEventi.repositories.PartecipationRepository;
 import com.gestioneEventi.repositories.UserRepository;
 
 @Service
@@ -32,6 +33,9 @@ public class EventService {
 
     @Autowired
     private FerieRepository ferieRepository;
+
+    @Autowired
+    private PartecipationRepository partecipationRepository;
 
     @Autowired
     private PartecipationService partecipationService;
@@ -122,7 +126,18 @@ public class EventService {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", id));
 
-        ferieRepository.deleteAllByEvent(event);
+        final EventType eventType = event.getEventType();
+        switch (eventType) {
+            case GENERICO:
+                partecipationRepository.deleteAllByEvent(event);
+                break;
+            case FERIE:
+                ferieRepository.deleteAllByEvent(event);
+                break;
+            default:
+                throw new IllegalArgumentException("Tipo di evento non valido: " + eventType);
+        }
+
         eventRepository.delete(event);
     }
 
