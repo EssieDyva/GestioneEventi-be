@@ -135,6 +135,7 @@ public class PartecipationController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EDITOR') or #user.id == @partecipationService.getOwnerId(#id)")
     @Operation(
         summary = "Aggiorna partecipazione",
         description = "Modifica lo stato di accettazione di una partecipazione esistente"
@@ -153,8 +154,9 @@ public class PartecipationController {
                 required = true,
                 content = @Content(schema = @Schema(implementation = UpdatePartecipation.class))
             )
-            @RequestBody UpdatePartecipation request) {
-        Partecipation updated = partecipationService.updatePartecipation(request, id);
+            @RequestBody UpdatePartecipation request,
+            @Parameter(hidden = true) @AuthenticationPrincipal User user) {
+        Partecipation updated = partecipationService.updatePartecipation(request, id, user);
         return ResponseEntity.ok(new PartecipationDTO(updated));
     }
 

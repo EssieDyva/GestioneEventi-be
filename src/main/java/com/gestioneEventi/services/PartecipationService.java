@@ -15,6 +15,7 @@ import com.gestioneEventi.exceptions.BusinessValidationException;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.Partecipation;
+import com.gestioneEventi.models.Role;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.PartecipationRepository;
@@ -77,12 +78,18 @@ public class PartecipationService {
     }
 
     @Transactional
-    public Partecipation updatePartecipation(UpdatePartecipation request, Long id) {
+    public Partecipation updatePartecipation(UpdatePartecipation request, Long id, User currentUser) {
         Partecipation partecipation = partecipationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Partecipazione", id));
 
-        partecipation.setIsEventAccepted(request.getIsEventAccepted());
+        boolean isOwner = partecipation.getUser().getId().equals(currentUser.getId());
+        boolean isPrivileged = currentUser.getRole() == Role.ADMIN || currentUser.getRole() == Role.EDITOR;
 
+        if (!isOwner && !isPrivileged) {
+            throw new BusinessValidationException("Non puoi modificare la partecipazione");
+        }
+
+        partecipation.setIsEventAccepted(request.getIsEventAccepted());
         return partecipationRepository.save(partecipation);
     }
 
