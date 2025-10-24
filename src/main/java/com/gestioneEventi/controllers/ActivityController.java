@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/activities/{eventId}")
+@RequestMapping("/api/events/{eventId}/activities")
 @Tag(name = "Activity", description = "Gestione delle attività per eventi TEAM_BUILDING")
 public class ActivityController {
 

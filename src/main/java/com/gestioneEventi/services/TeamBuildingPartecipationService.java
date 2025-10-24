@@ -78,6 +78,21 @@ public class TeamBuildingPartecipationService {
         return partecipationRepository.findByEvent(event);
     }
 
+    @Transactional(readOnly = true)
+    public java.util.Map<Long, Long> getActivityPopularity(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento", eventId));
+
+        List<TeamBuildingPartecipation> partecipations = partecipationRepository.findByEvent(event);
+
+        return partecipations.stream()
+                .flatMap(p -> p.getChosenActivities().stream())
+                .collect(java.util.stream.Collectors.groupingBy(
+                        Activity::getId,
+                        java.util.stream.Collectors.counting()
+                ));
+    }
+
     @Transactional
     public void deletePartecipation(Long eventId, User user) {
         Event event = eventRepository.findById(eventId)

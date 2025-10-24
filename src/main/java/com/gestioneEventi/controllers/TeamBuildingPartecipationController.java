@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/tbpartecipations/{eventId}")
+@RequestMapping("/api/events/{eventId}/partecipations")
 @Tag(name = "Team Building Partecipations", description = "Gestione delle partecipazioni agli eventi TEAM_BUILDING")
 public class TeamBuildingPartecipationController {
 
@@ -43,6 +44,14 @@ public class TeamBuildingPartecipationController {
                 .map(TeamBuildingPartecipationDTO::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(partecipationDTOs);
+    }
+
+    @Operation(summary = "Ottieni la popolarità delle attività per un evento TEAM_BUILDING (EDITOR/ADMIN)")
+    @GetMapping("/popularity")
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
+    public ResponseEntity<java.util.Map<Long, Long>> getActivityPopularity(@PathVariable Long eventId) {
+        java.util.Map<Long, Long> popularity = partecipationService.getActivityPopularity(eventId);
+        return ResponseEntity.ok(popularity);
     }
 
     @Operation(summary = "Annulla la partecipazione di un utente al TEAM_BUILDING")
