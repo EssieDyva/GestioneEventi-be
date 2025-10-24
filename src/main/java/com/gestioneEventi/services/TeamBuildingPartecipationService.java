@@ -54,6 +54,16 @@ public class TeamBuildingPartecipationService {
             partecipation.setChosenActivities(activities);
         }
 
+        // Validate dayStart and dayEnd
+        if (request.getDayStart() != null && request.getDayEnd() != null) {
+            int totalDays = (int) java.time.temporal.ChronoUnit.DAYS.between(event.getStartDate(), event.getEndDate()) + 1;
+            if (request.getDayStart() < 1 || request.getDayStart() > totalDays ||
+                request.getDayEnd() < 1 || request.getDayEnd() > totalDays ||
+                request.getDayStart() > request.getDayEnd()) {
+                throw new IllegalArgumentException("I giorni selezionati invalidi.");
+            }
+        }
+
         partecipation.setDayStart(request.getDayStart());
         partecipation.setDayEnd(request.getDayEnd());
 

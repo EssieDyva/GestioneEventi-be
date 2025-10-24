@@ -35,7 +35,7 @@ public class ActivityService {
         activity.setDescription(request.getDescription());
         activity.setCreatedBy(creator);
         activity.setEvent(event);
-        activity.setCustom(false);
+        activity.setCustom(request.isCustom());
 
         return activityRepository.save(activity);
     }
@@ -46,6 +46,20 @@ public class ActivityService {
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", eventId));
 
         return activityRepository.findByEvent(event);
+    }
+
+    @Transactional
+    public Activity updateActivity(Long activityId, CreateActivityRequest request, User currentUser) {
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attività", activityId));
+
+        if (!activity.getCreatedBy().equals(currentUser)) {
+            throw new IllegalArgumentException("Non puoi modificare attività create da altri utenti.");
+        }
+
+        activity.setName(request.getName());
+        activity.setDescription(request.getDescription());
+        return activityRepository.save(activity);
     }
 
     @Transactional

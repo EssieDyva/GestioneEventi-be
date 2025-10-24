@@ -27,7 +27,6 @@ public class ActivityController {
 
     @Operation(summary = "Aggiunge una nuova attività ad un evento TEAM_BUILDING")
     @PostMapping
-    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<ActivityDTO> createActivity(
             @PathVariable Long eventId,
             @RequestBody CreateActivityRequest request,
@@ -45,6 +44,18 @@ public class ActivityController {
                 .map(ActivityDTO::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(activityDTOs);
+    }
+
+    @Operation(summary = "Modifica un'attività (solo il creatore può farlo)")
+    @PutMapping("/{activityId}")
+    public ResponseEntity<ActivityDTO> updateActivity(
+            @PathVariable Long eventId,
+            @PathVariable Long activityId,
+            @RequestBody CreateActivityRequest request,
+            @AuthenticationPrincipal User user) {
+
+        Activity updated = activityService.updateActivity(activityId, request, user);
+        return ResponseEntity.ok(new ActivityDTO(updated));
     }
 
     @Operation(summary = "Elimina un'attività (solo il creatore può farlo)")

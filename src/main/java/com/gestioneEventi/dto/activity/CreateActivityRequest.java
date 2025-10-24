@@ -12,4 +12,7 @@ public class CreateActivityRequest {
 
     @Schema(description = "Descrizione dell'attività", example = "Squadre che si sfidano in una gara di orientamento nel bosco")
     private String description;
+
+    @Schema(description = "Indica se l'attività è personalizzata dall'utente", example = "true")
+    private boolean isCustom;
 }

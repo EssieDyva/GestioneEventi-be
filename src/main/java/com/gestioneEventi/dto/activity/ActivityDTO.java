@@ -17,7 +17,7 @@ public class ActivityDTO {
     @Schema(description = "Descrizione dell'attività", example = "Team challenge in the woods")
     private String description;
 
-    @Schema(description = "Indica se l'attività è personalizzata", example = "false")
+    @Schema(description = "Indica se l'attività è personalizzata dall'utente", example = "false")
     private boolean isCustom;
 
     public ActivityDTO(Activity activity) {
