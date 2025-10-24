@@ -1,5 +1,7 @@
 package com.gestioneEventi.dto.partecipation;
 
+import com.gestioneEventi.models.PartecipationStatus;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -12,5 +14,5 @@ public class UpdatePartecipation {
         example = "true",
         nullable = true
     )
-    private Boolean isEventAccepted;
+    private PartecipationStatus status;
 }

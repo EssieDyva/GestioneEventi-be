@@ -3,6 +3,7 @@ package com.gestioneEventi.dto.partecipation;
 import com.gestioneEventi.dto.UserDTO;
 import com.gestioneEventi.dto.event.EventDTO;
 import com.gestioneEventi.models.Partecipation;
+import com.gestioneEventi.models.PartecipationStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -16,10 +17,10 @@ public class PartecipationDTO {
     
     @Schema(
         description = "Stato di accettazione dell'evento da parte dell'utente", 
-        example = "true",
+        example = "ACCEPTED",
         nullable = true
     )
-    private Boolean isEventAccepted;
+    private PartecipationStatus status;
     
     @Schema(description = "Evento associato alla partecipazione")
     private EventDTO event;
@@ -29,7 +30,7 @@ public class PartecipationDTO {
 
     public PartecipationDTO(Partecipation partecipation) {
         this.id = partecipation.getId();
-        this.isEventAccepted = partecipation.getIsEventAccepted();
+        this.status = partecipation.getStatus();
         this.event = partecipation.getEvent() != null ? new EventDTO(partecipation.getEvent()) : null;
         this.user = partecipation.getUser() != null ? new UserDTO(partecipation.getUser()) : null;
     }

@@ -19,7 +19,7 @@ public class Partecipation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     private Long id;
-    private Boolean isEventAccepted;
+    private PartecipationStatus status;
     
     @ManyToOne
     private Event event;

@@ -15,6 +15,7 @@ import com.gestioneEventi.exceptions.BusinessValidationException;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.Partecipation;
+import com.gestioneEventi.models.PartecipationStatus;
 import com.gestioneEventi.models.Role;
 import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
@@ -59,7 +60,7 @@ public class PartecipationService {
                 .filter(u -> !alreadyJoinedUserIds.contains(u.getId()))
                 .map(user -> {
                     Partecipation p = new Partecipation();
-                    p.setIsEventAccepted(false);
+                    p.setStatus(PartecipationStatus.PENDING);
                     p.setEvent(event);
                     p.setUser(user);
                     return p;
@@ -89,7 +90,7 @@ public class PartecipationService {
             throw new BusinessValidationException("Non puoi modificare la partecipazione");
         }
 
-        partecipation.setIsEventAccepted(request.getIsEventAccepted());
+        partecipation.setStatus(request.getStatus());
         return partecipationRepository.save(partecipation);
     }
 
@@ -98,15 +99,17 @@ public class PartecipationService {
     }
 
     public List<Partecipation> getPartecipationsByEventId(Long eventId) {
-        return partecipationRepository.findAll().stream()
-                .filter(p -> p.getEvent() != null && p.getEvent().getId().equals(eventId))
-                .toList();
+        return partecipationRepository.findByEventId(eventId);
     }
 
     public List<Partecipation> getPartecipationsByUserId(Long userId) {
-        return partecipationRepository.findAll().stream()
-                .filter(p -> p.getUser() != null && p.getUser().getId().equals(userId))
-                .toList();
+        return partecipationRepository.findByUserId(userId);
+    }
+
+    public Long getOwnerId(Long partecipationId) {
+        return partecipationRepository.findById(partecipationId)
+                .map(p -> p.getUser().getId())
+                .orElse(null);
     }
 
     @Transactional
