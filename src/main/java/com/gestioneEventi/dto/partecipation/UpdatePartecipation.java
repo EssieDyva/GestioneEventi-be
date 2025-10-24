@@ -10,9 +10,9 @@ import lombok.Data;
 public class UpdatePartecipation {
     
     @Schema(
-        description = "Nuovo stato di accettazione dell'evento (true = accettato, false = rifiutato, null = in sospeso)", 
-        example = "true",
-        nullable = true
+        description = "Nuovo stato di accettazione dell'evento (PENDING = in sospeso, ACCEPTED = accettato, REJECTED = rifiutato)",
+        example = "ACCEPTED",
+        allowableValues = {"PENDING", "ACCEPTED", "REJECTED"}
     )
     private PartecipationStatus status;
 }

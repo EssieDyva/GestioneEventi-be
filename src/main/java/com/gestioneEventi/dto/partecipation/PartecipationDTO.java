@@ -16,9 +16,9 @@ public class PartecipationDTO {
     private Long id;
     
     @Schema(
-        description = "Stato di accettazione dell'evento da parte dell'utente", 
+        description = "Stato di accettazione dell'evento da parte dell'utente (PENDING = in sospeso, ACCEPTED = accettato, REJECTED = rifiutato)",
         example = "ACCEPTED",
-        nullable = true
+        allowableValues = {"PENDING", "ACCEPTED", "REJECTED"}
     )
     private PartecipationStatus status;
     
