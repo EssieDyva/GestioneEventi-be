@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/groups/**").authenticated()
                         .requestMatchers("/api/user/**").authenticated()
                         .requestMatchers("/api/partecipation/**").authenticated()
+                        .requestMatchers("/api/activities/**").authenticated()
+                        .requestMatchers("/api/tbpartecipations/**").authenticated()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
