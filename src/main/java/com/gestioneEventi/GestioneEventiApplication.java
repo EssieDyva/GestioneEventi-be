@@ -9,8 +9,17 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class GestioneEventiApplication {
 
 	public static void main(String[] args) {
-		Dotenv dotenv = Dotenv.configure().load();
-		System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+		// Carica .env solo se esiste
+		try {
+			Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+			String jwtSecret = dotenv.get("JWT_SECRET");
+			if (jwtSecret != null) {
+				System.setProperty("JWT_SECRET", jwtSecret);
+			}
+		} catch (Exception e) {
+			System.out.println("⚠️ Nessun file .env trovato, usando configurazioni di default");
+		}
+
 		SpringApplication.run(GestioneEventiApplication.class, args);
 	}
 }
