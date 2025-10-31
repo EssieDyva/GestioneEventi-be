@@ -17,9 +17,11 @@ import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
 import com.gestioneEventi.models.EventType;
 import com.gestioneEventi.models.User;
+import com.gestioneEventi.repositories.ActivityRepository;
 import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.FerieRepository;
 import com.gestioneEventi.repositories.PartecipationRepository;
+import com.gestioneEventi.repositories.TeamBuildingPartecipationRepository;
 import com.gestioneEventi.repositories.UserRepository;
 
 @Service
@@ -39,6 +41,12 @@ public class EventService {
 
     @Autowired
     private PartecipationService partecipationService;
+
+    @Autowired
+    private TeamBuildingPartecipationRepository teamBuildingPartecipationRepository;
+
+    @Autowired
+    private ActivityRepository activityRepository;
 
     @Transactional(readOnly = true)
     public List<Event> getAllEvents() {
@@ -133,6 +141,10 @@ public class EventService {
                 break;
             case FERIE:
                 ferieRepository.deleteAllByEvent(event);
+                break;
+            case TEAM_BUILDING:
+                teamBuildingPartecipationRepository.deleteAllByEvent(event);
+                activityRepository.deleteAll(activityRepository.findByEvent(event));
                 break;
             default:
                 throw new IllegalArgumentException("Tipo di evento non valido: " + eventType);
