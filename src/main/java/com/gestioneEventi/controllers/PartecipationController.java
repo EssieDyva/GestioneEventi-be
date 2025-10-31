@@ -62,8 +62,8 @@ public class PartecipationController {
     @GetMapping
     @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     @Operation(
-        summary = "Ottieni tutte le partecipazioni",
-        description = "Recupera l'elenco completo di tutte le partecipazioni"
+        summary = "Ottieni tutte le partecipazioni  (EDITOR/ADMIN)",
+        description = "Recupera l'elenco completo di tutte le partecipazioni. Richiede ruolo EDITOR o ADMIN"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Lista partecipazioni recuperata con successo"),
