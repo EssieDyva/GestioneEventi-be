@@ -75,10 +75,8 @@ public class AuthController {
 
             Cookie cookie = new Cookie("refreshToken", refreshToken);
             cookie.setHttpOnly(true);
-            cookie.setSecure(false);
             cookie.setPath("/auth/refresh");
             cookie.setMaxAge(7 * 24 * 60 * 60);
-            cookie.setAttribute("SameSite", "None");
             response.addCookie(cookie);
 
             return ResponseEntity.ok(new AuthResponse(accessToken, new UserDTO(user)));
