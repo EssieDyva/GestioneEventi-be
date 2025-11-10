@@ -1,15 +1,12 @@
 package com.gestioneEventi.dto.teambuilding;
 
 import com.gestioneEventi.dto.UserDTO;
-import com.gestioneEventi.dto.activity.ActivityDTO;
 import com.gestioneEventi.dto.event.EventDTO;
 import com.gestioneEventi.models.TeamBuildingPartecipation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Schema(description = "Dettagli di una partecipazione a un evento TEAM_BUILDING")
@@ -24,8 +21,8 @@ public class TeamBuildingPartecipationDTO {
     @Schema(description = "Evento associato")
     private EventDTO event;
 
-    @Schema(description = "Attività scelte per la partecipazione")
-    private List<ActivityDTO> chosenActivities;
+    @Schema(description = "ID dell'attività scelta", example = "1")
+    private Long activityId;
 
     @Schema(description = "Data di inizio partecipazione", example = "2025-12-01")
     private LocalDate startDate;
@@ -37,10 +34,7 @@ public class TeamBuildingPartecipationDTO {
         this.id = partecipation.getId();
         this.user = new UserDTO(partecipation.getUser());
         this.event = new EventDTO(partecipation.getEvent());
-        this.chosenActivities = partecipation.getChosenActivities()
-                .stream()
-                .map(ActivityDTO::new)
-                .collect(Collectors.toList());
+        this.activityId = partecipation.getChosenActivityId();
         this.startDate = partecipation.getStartDate();
         this.endDate = partecipation.getEndDate();
     }

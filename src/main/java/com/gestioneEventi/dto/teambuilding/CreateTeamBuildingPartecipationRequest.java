@@ -4,14 +4,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 @Data
 @Schema(description = "Richiesta di partecipazione ad un evento TEAM_BUILDING")
 public class CreateTeamBuildingPartecipationRequest {
 
-    @Schema(description = "Lista delle attività scelte", example = "[1, 2]")
-    private Set<Long> activityIds;
+    @Schema(description = "ID dell'attività scelta", example = "1", required = true)
+    private Long activityId;
 
     @Schema(description = "Data di inizio partecipazione", example = "2025-12-01", required = true)
     private LocalDate startDate;

@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -24,9 +22,7 @@ public class TeamBuildingPartecipation {
     @ManyToOne(optional = false)
     private Event event;
 
-    @ManyToMany
-    @JoinTable(name = "teambuilding_partecipation_activities", joinColumns = @JoinColumn(name = "partecipation_id"), inverseJoinColumns = @JoinColumn(name = "activity_id"))
-    private Set<Activity> chosenActivities = new HashSet<>();
+    private Long chosenActivityId;
 
     private LocalDate startDate;
     private LocalDate endDate;

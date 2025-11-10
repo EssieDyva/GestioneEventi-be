@@ -37,40 +37,30 @@ public class TeamBuildingPartecipationService {
         }
 
         List<TeamBuildingPartecipation> existingParticipations = partecipationRepository.findByUserAndEvent(user, event);
-        Set<Long> existingActivityIds = existingParticipations.stream()
-                .flatMap(p -> p.getChosenActivities().stream())
-                .map(Activity::getId)
-                .collect(java.util.stream.Collectors.toSet());
+        Long existingActivityId = existingParticipations.stream()
+                .findFirst()
+                .map(TeamBuildingPartecipation::getChosenActivityId)
+                .orElse(null);
 
-        if (!existingActivityIds.isEmpty()) {
-            Set<Long> requestedActivityIds = request.getActivityIds() != null ?
-                    new HashSet<>(request.getActivityIds()) : new HashSet<>();
-            if (!existingActivityIds.equals(requestedActivityIds)) {
-                throw new IllegalArgumentException("Puoi scegliere solo le stesse attività già selezionate per questo evento.");
-            }
+        if (existingActivityId != null && !existingActivityId.equals(request.getActivityId())) {
+            throw new IllegalArgumentException("Puoi scegliere solo la stessa attività già selezionata per questo evento.");
         }
 
         TeamBuildingPartecipation partecipation = new TeamBuildingPartecipation();
         partecipation.setEvent(event);
         partecipation.setUser(user);
 
-        if (request.getActivityIds() == null || request.getActivityIds().isEmpty()) {
+        if (request.getActivityId() == null) {
             throw new IllegalArgumentException("Devi selezionare un'attività.");
         }
-        if (request.getActivityIds().size() != 1) {
-            throw new IllegalArgumentException("Puoi selezionare solo un'attività.");
+
+        Activity act = activityRepository.findById(request.getActivityId())
+                .orElseThrow(() -> new ResourceNotFoundException("Attività", request.getActivityId()));
+        if (!act.getEvent().equals(event)) {
+            throw new IllegalArgumentException("L'attività " + act.getId() + " non appartiene a questo evento.");
         }
 
-        Set<Activity> activities = new HashSet<>();
-        for (Long id : request.getActivityIds()) {
-            Activity act = activityRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Attività", id));
-            if (!act.getEvent().equals(event)) {
-                throw new IllegalArgumentException("L'attività " + act.getId() + " non appartiene a questo evento.");
-            }
-            activities.add(act);
-        }
-        partecipation.setChosenActivities(activities);
+        partecipation.setChosenActivityId(request.getActivityId());
 
         if (request.getStartDate() == null || request.getEndDate() == null) {
             throw new IllegalArgumentException("Date di inizio e fine sono obbligatorie.");
@@ -105,9 +95,8 @@ public class TeamBuildingPartecipationService {
         Set<String> uniqueUserActivityPairs = new HashSet<>();
         for (TeamBuildingPartecipation p : partecipations) {
             Long userId = p.getUser().getId();
-            for (Activity activity : p.getChosenActivities()) {
-                uniqueUserActivityPairs.add(userId + "-" + activity.getId());
-            }
+            Long activityId = p.getChosenActivityId();
+            uniqueUserActivityPairs.add(userId + "-" + activityId);
         }
 
         Map<Long, Long> popularity = new HashMap<>();
