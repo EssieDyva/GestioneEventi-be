@@ -26,7 +26,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/partecipation")
-@Tag(name = "Partecipazioni", description = "API per la gestione delle partecipazioni agli eventi")
+@Tag(name = "Partecipazioni", description = "API per la gestione delle partecipazioni agli eventi di tipo GENERICO")
 @SecurityRequirement(name = "bearerAuth")
 public class PartecipationController {
 
