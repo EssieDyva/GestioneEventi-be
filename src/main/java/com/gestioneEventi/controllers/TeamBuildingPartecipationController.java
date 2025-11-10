@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/events/{eventId}/partecipations")
-@Tag(name = "Team Building Partecipations", description = "Gestione delle partecipazioni agli eventi TEAM_BUILDING")
+@Tag(name = "Team Building Partecipations", description = "Gestione delle partecipazioni agli eventi di tipo TEAM_BUILDING")
 public class TeamBuildingPartecipationController {
 
     @Autowired
