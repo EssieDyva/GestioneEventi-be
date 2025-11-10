@@ -3,6 +3,7 @@ package com.gestioneEventi.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,8 +28,8 @@ public class TeamBuildingPartecipation {
     @JoinTable(name = "teambuilding_partecipation_activities", joinColumns = @JoinColumn(name = "partecipation_id"), inverseJoinColumns = @JoinColumn(name = "activity_id"))
     private Set<Activity> chosenActivities = new HashSet<>();
 
-    private Integer dayStart;
-    private Integer dayEnd;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     @Override
     public boolean equals(Object o) {

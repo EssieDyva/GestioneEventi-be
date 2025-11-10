@@ -6,13 +6,12 @@ import com.gestioneEventi.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface TeamBuildingPartecipationRepository extends JpaRepository<TeamBuildingPartecipation, Long> {
 
     List<TeamBuildingPartecipation> findByEvent(Event event);
 
-    Optional<TeamBuildingPartecipation> findByUserAndEvent(User user, Event event);
+    List<TeamBuildingPartecipation> findByUserAndEvent(User user, Event event);
 
     void deleteAllByEvent(Event event);
 }

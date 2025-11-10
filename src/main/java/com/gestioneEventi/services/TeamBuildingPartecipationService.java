@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -34,37 +36,53 @@ public class TeamBuildingPartecipationService {
             throw new IllegalArgumentException("Le partecipazioni con attività sono valide solo per eventi TEAM_BUILDING.");
         }
 
-        partecipationRepository.findByUserAndEvent(user, event)
-                .ifPresent(p -> { throw new IllegalArgumentException("Hai già partecipato a questo evento."); });
+        List<TeamBuildingPartecipation> existingParticipations = partecipationRepository.findByUserAndEvent(user, event);
+        Set<Long> existingActivityIds = existingParticipations.stream()
+                .flatMap(p -> p.getChosenActivities().stream())
+                .map(Activity::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        if (!existingActivityIds.isEmpty()) {
+            Set<Long> requestedActivityIds = request.getActivityIds() != null ?
+                    new HashSet<>(request.getActivityIds()) : new HashSet<>();
+            if (!existingActivityIds.equals(requestedActivityIds)) {
+                throw new IllegalArgumentException("Puoi scegliere solo le stesse attività già selezionate per questo evento.");
+            }
+        }
 
         TeamBuildingPartecipation partecipation = new TeamBuildingPartecipation();
         partecipation.setEvent(event);
         partecipation.setUser(user);
 
-        if (request.getActivityIds() != null && !request.getActivityIds().isEmpty()) {
-            Set<Activity> activities = new HashSet<>();
-            for (Long id : request.getActivityIds()) {
-                Activity act = activityRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("Attività", id));
-                if (!act.getEvent().equals(event)) {
-                    throw new IllegalArgumentException("L'attività " + act.getId() + " non appartiene a questo evento.");
-                }
-                activities.add(act);
-            }
-            partecipation.setChosenActivities(activities);
+        if (request.getActivityIds() == null || request.getActivityIds().isEmpty()) {
+            throw new IllegalArgumentException("Devi selezionare un'attività.");
+        }
+        if (request.getActivityIds().size() != 1) {
+            throw new IllegalArgumentException("Puoi selezionare solo un'attività.");
         }
 
-        if (request.getDayStart() != null && request.getDayEnd() != null) {
-            int totalDays = (int) java.time.temporal.ChronoUnit.DAYS.between(event.getStartDate(), event.getEndDate()) + 1;
-            if (request.getDayStart() < 1 || request.getDayStart() > totalDays ||
-                request.getDayEnd() < 1 || request.getDayEnd() > totalDays ||
-                request.getDayStart() > request.getDayEnd()) {
-                throw new IllegalArgumentException("I giorni selezionati invalidi.");
+        Set<Activity> activities = new HashSet<>();
+        for (Long id : request.getActivityIds()) {
+            Activity act = activityRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Attività", id));
+            if (!act.getEvent().equals(event)) {
+                throw new IllegalArgumentException("L'attività " + act.getId() + " non appartiene a questo evento.");
             }
+            activities.add(act);
+        }
+        partecipation.setChosenActivities(activities);
+
+        if (request.getStartDate() == null || request.getEndDate() == null) {
+            throw new IllegalArgumentException("Date di inizio e fine sono obbligatorie.");
+        }
+        if (request.getStartDate().isBefore(event.getStartDate()) || request.getStartDate().isAfter(event.getEndDate()) ||
+            request.getEndDate().isBefore(event.getStartDate()) || request.getEndDate().isAfter(event.getEndDate()) ||
+            request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("Le date selezionate sono invalide o fuori dal periodo dell'evento.");
         }
 
-        partecipation.setDayStart(request.getDayStart());
-        partecipation.setDayEnd(request.getDayEnd());
+        partecipation.setStartDate(request.getStartDate());
+        partecipation.setEndDate(request.getEndDate());
 
         return partecipationRepository.save(partecipation);
     }
@@ -84,12 +102,21 @@ public class TeamBuildingPartecipationService {
 
         List<TeamBuildingPartecipation> partecipations = partecipationRepository.findByEvent(event);
 
-        return partecipations.stream()
-                .flatMap(p -> p.getChosenActivities().stream())
-                .collect(java.util.stream.Collectors.groupingBy(
-                        Activity::getId,
-                        java.util.stream.Collectors.counting()
-                ));
+        Set<String> uniqueUserActivityPairs = new HashSet<>();
+        for (TeamBuildingPartecipation p : partecipations) {
+            Long userId = p.getUser().getId();
+            for (Activity activity : p.getChosenActivities()) {
+                uniqueUserActivityPairs.add(userId + "-" + activity.getId());
+            }
+        }
+
+        Map<Long, Long> popularity = new HashMap<>();
+        for (String pair : uniqueUserActivityPairs) {
+            Long activityId = Long.parseLong(pair.split("-")[1]);
+            popularity.put(activityId, popularity.getOrDefault(activityId, 0L) + 1);
+        }
+
+        return popularity;
     }
 
     @Transactional
@@ -97,9 +124,11 @@ public class TeamBuildingPartecipationService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", eventId));
 
-        TeamBuildingPartecipation partecipation = partecipationRepository.findByUserAndEvent(user, event)
-                .orElseThrow(() -> new IllegalArgumentException("Non hai partecipazioni registrate per questo evento."));
+        List<TeamBuildingPartecipation> participations = partecipationRepository.findByUserAndEvent(user, event);
+        if (participations.isEmpty()) {
+            throw new IllegalArgumentException("Non hai partecipazioni registrate per questo evento.");
+        }
 
-        partecipationRepository.delete(partecipation);
+        partecipationRepository.deleteAll(participations);
     }
 }

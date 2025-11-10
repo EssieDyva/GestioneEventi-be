@@ -7,6 +7,7 @@ import com.gestioneEventi.models.TeamBuildingPartecipation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,11 +27,11 @@ public class TeamBuildingPartecipationDTO {
     @Schema(description = "Attività scelte per la partecipazione")
     private List<ActivityDTO> chosenActivities;
 
-    @Schema(description = "Giorno di inizio", example = "1")
-    private Integer dayStart;
+    @Schema(description = "Data di inizio partecipazione", example = "2025-12-01")
+    private LocalDate startDate;
 
-    @Schema(description = "Giorno di fine", example = "2")
-    private Integer dayEnd;
+    @Schema(description = "Data di fine partecipazione", example = "2025-12-02")
+    private LocalDate endDate;
 
     public TeamBuildingPartecipationDTO(TeamBuildingPartecipation partecipation) {
         this.id = partecipation.getId();
@@ -40,7 +41,7 @@ public class TeamBuildingPartecipationDTO {
                 .stream()
                 .map(ActivityDTO::new)
                 .collect(Collectors.toList());
-        this.dayStart = partecipation.getDayStart();
-        this.dayEnd = partecipation.getDayEnd();
+        this.startDate = partecipation.getStartDate();
+        this.endDate = partecipation.getEndDate();
     }
 }
