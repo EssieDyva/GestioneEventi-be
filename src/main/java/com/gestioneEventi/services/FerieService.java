@@ -13,6 +13,7 @@ import com.gestioneEventi.exceptions.BusinessValidationException;
 import com.gestioneEventi.exceptions.InsufficientPermissionException;
 import com.gestioneEventi.exceptions.ResourceNotFoundException;
 import com.gestioneEventi.models.Event;
+import com.gestioneEventi.models.EventType;
 import com.gestioneEventi.models.Ferie;
 import com.gestioneEventi.models.Status;
 import com.gestioneEventi.models.User;
@@ -45,6 +46,10 @@ public class FerieService {
 
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", request.getEventId()));
+
+        if (event.getEventType() != EventType.FERIE) {
+            throw new BusinessValidationException("Le ferie possono essere richieste solo per eventi di tipo FERIE");
+        }
 
         Ferie ferie = new Ferie();
         ferie.setTitle(request.getTitle());
