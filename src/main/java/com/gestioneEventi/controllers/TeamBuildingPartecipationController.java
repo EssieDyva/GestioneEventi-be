@@ -54,6 +54,17 @@ public class TeamBuildingPartecipationController {
         return ResponseEntity.ok(popularity);
     }
 
+    @Operation(summary = "Ottieni le mie partecipazioni a eventi TEAM_BUILDING")
+    @GetMapping("/me")
+    public ResponseEntity<List<TeamBuildingPartecipationDTO>> getMyPartecipations(
+            @AuthenticationPrincipal User currentUser) {
+        List<TeamBuildingPartecipation> partecipations = partecipationService.getPartecipationsByUser(currentUser);
+        List<TeamBuildingPartecipationDTO> partecipationDTOs = partecipations.stream()
+                .map(TeamBuildingPartecipationDTO::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(partecipationDTOs);
+    }
+
     @Operation(summary = "Annulla la partecipazione di un utente al TEAM_BUILDING")
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteMyPartecipation(

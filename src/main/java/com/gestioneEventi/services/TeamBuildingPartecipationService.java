@@ -91,6 +91,11 @@ public class TeamBuildingPartecipationService {
     }
 
     @Transactional(readOnly = true)
+    public List<TeamBuildingPartecipation> getPartecipationsByUser(User user) {
+        return partecipationRepository.findByUser(user);
+    }
+
+    @Transactional(readOnly = true)
     public java.util.Map<Long, Long> getActivityPopularity(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", eventId));

@@ -11,6 +11,8 @@ public interface TeamBuildingPartecipationRepository extends JpaRepository<TeamB
 
     List<TeamBuildingPartecipation> findByEvent(Event event);
 
+    List<TeamBuildingPartecipation> findByUser(User user);
+
     List<TeamBuildingPartecipation> findByUserAndEvent(User user, Event event);
 
     void deleteAllByEvent(Event event);
