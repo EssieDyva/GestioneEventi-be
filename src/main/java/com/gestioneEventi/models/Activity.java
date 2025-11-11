@@ -29,10 +29,7 @@ public class Activity {
      */
     private String name;
 
-    /**
-     * Detailed description of the activity.
-     */
-    private String description;
+
 
     /**
      * Indicates whether this is a custom activity or a predefined one.

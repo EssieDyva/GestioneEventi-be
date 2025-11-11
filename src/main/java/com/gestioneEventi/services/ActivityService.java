@@ -30,9 +30,10 @@ public class ActivityService {
     /**
      * Creates a new activity for a team building event.
      * Validates that the event is of type TEAM_BUILDING before creating the activity.
+     * Sets isCustom to true if the creator is a USER, false otherwise.
      *
      * @param eventId The ID of the event to add the activity to
-     * @param request The activity creation request containing name, description, and custom flag
+     * @param request The activity creation request containing name
      * @param creator The user creating the activity
      * @return The created and saved activity
      * @throws ResourceNotFoundException if the event is not found
@@ -49,10 +50,9 @@ public class ActivityService {
 
         Activity activity = new Activity();
         activity.setName(request.getName());
-        activity.setDescription(request.getDescription());
         activity.setCreatedBy(creator);
         activity.setEvent(event);
-        activity.setCustom(request.isCustom());
+        activity.setCustom(creator.getRole() == Role.USER);
 
         return activityRepository.save(activity);
     }
@@ -77,7 +77,7 @@ public class ActivityService {
      * Only the creator of the activity can modify it.
      *
      * @param activityId The ID of the activity to update
-     * @param request The update request containing new name and description
+     * @param request The update request containing new name
      * @param currentUser The user attempting to update the activity
      * @return The updated activity
      * @throws ResourceNotFoundException if the activity is not found
@@ -93,7 +93,6 @@ public class ActivityService {
         }
 
         activity.setName(request.getName());
-        activity.setDescription(request.getDescription());
         return activityRepository.save(activity);
     }
 
