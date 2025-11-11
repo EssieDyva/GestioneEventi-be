@@ -24,6 +24,12 @@ import com.gestioneEventi.repositories.PartecipationRepository;
 import com.gestioneEventi.repositories.TeamBuildingPartecipationRepository;
 import com.gestioneEventi.repositories.UserRepository;
 
+/**
+ * Service class for managing event-related operations.
+ * Handles CRUD operations for events, including different event types (generic, vacation, team building).
+ * Manages event participants, validation, and cascading deletions.
+ *
+ */
 @Service
 public class EventService {
 
@@ -48,22 +54,50 @@ public class EventService {
     @Autowired
     private ActivityRepository activityRepository;
 
+    /**
+     * Retrieves all events from the database.
+     *
+     * @return List of all events
+     */
     @Transactional(readOnly = true)
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
 
+    /**
+     * Retrieves all events created by a specific user.
+     *
+     * @param id The ID of the user whose events to retrieve
+     * @return List of events created by the specified user
+     */
     @Transactional(readOnly = true)
     public List<Event> getUserEvents(Long id) {
         return eventRepository.findAllByUserId(id);
     }
 
+    /**
+     * Retrieves a specific event by its ID.
+     *
+     * @param id The ID of the event to retrieve
+     * @return The event with the specified ID
+     * @throws ResourceNotFoundException if the event is not found
+     */
     @Transactional(readOnly = true)
     public Event getEventById(Long id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", id));
     }
 
+    /**
+     * Creates a new event based on the provided request.
+     * Sets default event type if not specified, validates dates, and creates participations for generic events.
+     *
+     * @param request The event creation request containing event details
+     * @param creator The user creating the event
+     * @return The created and saved event
+     * @throws IllegalArgumentException if date validation fails
+     * @throws ResourceNotFoundException if any invited user is not found
+     */
     @Transactional
     public Event createEvent(CreateEventRequest request, User creator) {
         Event event = new Event();
@@ -98,6 +132,16 @@ public class EventService {
         return savedEvent;
     }
 
+    /**
+     * Updates an existing event with new information.
+     * Validates dates and manages participant changes for generic events.
+     *
+     * @param id The ID of the event to update
+     * @param request The update request containing new event details
+     * @return Optional containing the updated event, or empty if event not found
+     * @throws IllegalArgumentException if date validation fails
+     * @throws ResourceNotFoundException if any invited user is not found
+     */
     @Transactional
     public Optional<Event> updateEvent(Long id, UpdateEventRequest request) {
         return eventRepository.findById(id).map(event -> {
@@ -129,6 +173,14 @@ public class EventService {
         });
     }
 
+    /**
+     * Deletes an event and all its associated data based on event type.
+     * Performs cascading deletion of related entities (participations, activities, etc.).
+     *
+     * @param id The ID of the event to delete
+     * @throws ResourceNotFoundException if the event is not found
+     * @throws IllegalArgumentException if the event type is invalid
+     */
     @Transactional
     public void deleteEvent(Long id) {
         Event event = eventRepository.findById(id)
@@ -153,6 +205,13 @@ public class EventService {
         eventRepository.delete(event);
     }
 
+    /**
+     * Validates the start and end dates of an event.
+     * Ensures dates are present, start date is not after end date, and start date is not in the past.
+     *
+     * @param event The event whose dates to validate
+     * @throws IllegalArgumentException if any validation rule is violated
+     */
     private void validateEventDates(Event event) {
         if (event.getStartDate() == null || event.getEndDate() == null) {
             throw new IllegalArgumentException("Date di inizio e fine sono obbligatorie");

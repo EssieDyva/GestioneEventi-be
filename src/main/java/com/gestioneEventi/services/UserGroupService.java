@@ -18,6 +18,11 @@ import com.gestioneEventi.models.UserGroup;
 import com.gestioneEventi.repositories.UserGroupRepository;
 import com.gestioneEventi.repositories.UserRepository;
 
+/**
+ * Service class for managing user groups.
+ * Handles CRUD operations for user groups and manages group membership relationships.
+ *
+ */
 @Service
 public class UserGroupService {
 

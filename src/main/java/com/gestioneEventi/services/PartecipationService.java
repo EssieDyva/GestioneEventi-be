@@ -22,6 +22,12 @@ import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.PartecipationRepository;
 import com.gestioneEventi.repositories.UserRepository;
 
+/**
+ * Service class for managing user participations in events.
+ * Handles creation, updates, and queries for participation records with proper authorization checks.
+ * Supports bulk operations for creating multiple participations at once.
+ *
+ */
 @Service
 public class PartecipationService {
 
@@ -34,6 +40,15 @@ public class PartecipationService {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Creates multiple participation records for users in an event.
+     * Validates that all users exist and skips duplicates. All new participations start with PENDING status.
+     *
+     * @param request The creation request containing event ID and list of user IDs
+     * @return List of created participation records
+     * @throws BusinessValidationException if event or users are not specified, or if users don't exist
+     * @throws ResourceNotFoundException if the event is not found
+     */
     @Transactional
     public List<Partecipation> createPartecipation(CreatePartecipation request) {
         if (request.getEventId() == null)
@@ -70,6 +85,13 @@ public class PartecipationService {
         return partecipationRepository.saveAll(toCreate);
     }
 
+    /**
+     * Convenience method to create participations using event ID and user IDs directly.
+     *
+     * @param eventId The ID of the event
+     * @param userIds List of user IDs to create participations for
+     * @return List of created participation records
+     */
     @Transactional
     public List<Partecipation> createPartecipation(Long eventId, List<Long> userIds) {
         CreatePartecipation request = new CreatePartecipation();
@@ -78,6 +100,17 @@ public class PartecipationService {
         return createPartecipation(request);
     }
 
+    /**
+     * Updates the status of a participation record.
+     * Only the participation owner or privileged users (ADMIN/EDITOR) can update the status.
+     *
+     * @param request The update request containing new status
+     * @param id The ID of the participation to update
+     * @param currentUser The user attempting the update
+     * @return The updated participation record
+     * @throws ResourceNotFoundException if the participation is not found
+     * @throws BusinessValidationException if the user lacks permission to update
+     */
     @Transactional
     public Partecipation updatePartecipation(UpdatePartecipation request, Long id, User currentUser) {
         Partecipation partecipation = partecipationRepository.findById(id)
@@ -94,24 +127,53 @@ public class PartecipationService {
         return partecipationRepository.save(partecipation);
     }
 
+    /**
+     * Retrieves all participation records in the system.
+     *
+     * @return List of all participations
+     */
     public List<Partecipation> getAllPartecipations() {
         return partecipationRepository.findAll();
     }
 
+    /**
+     * Retrieves all participations for a specific event.
+     *
+     * @param eventId The ID of the event
+     * @return List of participations for the specified event
+     */
     public List<Partecipation> getPartecipationsByEventId(Long eventId) {
         return partecipationRepository.findByEventId(eventId);
     }
 
+    /**
+     * Retrieves all participations for a specific user.
+     *
+     * @param userId The ID of the user
+     * @return List of participations for the specified user
+     */
     public List<Partecipation> getPartecipationsByUserId(Long userId) {
         return partecipationRepository.findByUserId(userId);
     }
 
+    /**
+     * Gets the owner (user) ID of a participation record.
+     *
+     * @param partecipationId The ID of the participation
+     * @return The user ID of the participation owner, or null if not found
+     */
     public Long getOwnerId(Long partecipationId) {
         return partecipationRepository.findById(partecipationId)
                 .map(p -> p.getUser().getId())
                 .orElse(null);
     }
 
+    /**
+     * Deletes a participation record by ID.
+     *
+     * @param id The ID of the participation to delete
+     * @throws ResourceNotFoundException if the participation is not found
+     */
     @Transactional
     public void deletePartecipation(Long id) {
         if (!partecipationRepository.existsById(id)) {

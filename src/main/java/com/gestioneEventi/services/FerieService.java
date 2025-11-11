@@ -20,6 +20,12 @@ import com.gestioneEventi.models.User;
 import com.gestioneEventi.repositories.EventRepository;
 import com.gestioneEventi.repositories.FerieRepository;
 
+/**
+ * Service class for managing vacation/leave requests (Ferie).
+ * Handles CRUD operations for vacation requests with validation and permission checks.
+ * Ensures vacation requests are only allowed for FERIE-type events and within valid date ranges.
+ *
+ */
 @Service
 public class FerieService {
 
@@ -29,6 +35,18 @@ public class FerieService {
     @Autowired
     private EventRepository eventRepository;
 
+    /**
+     * Creates a new vacation request for a FERIE-type event.
+     * Validates user permissions, event type, and date constraints before creating the request.
+     *
+     * @param request The vacation creation request containing event ID, dates, and title
+     * @param user The user requesting the vacation
+     * @return The created and saved vacation request
+     * @throws BusinessValidationException if event is not specified or not of type FERIE
+     * @throws InsufficientPermissionException if user is not invited to the event or event has started
+     * @throws ResourceNotFoundException if the event is not found
+     * @throws IllegalArgumentException if date validation fails
+     */
     @Transactional
     public Ferie createFerie(CreateFerieRequest request, User user) {
         if (request.getEventId() == null) {
@@ -64,16 +82,37 @@ public class FerieService {
         return ferieRepository.save(ferie);
     }
 
+    /**
+     * Retrieves all vacation requests for a specific user by email.
+     *
+     * @param email The email address of the user
+     * @return List of vacation requests for the specified user
+     */
     @Transactional(readOnly = true)
     public List<Ferie> getFerieByUserEmail(String email) {
         return ferieRepository.findByCreatedByEmail(email);
     }
 
+    /**
+     * Retrieves all vacation requests in the system.
+     *
+     * @return List of all vacation requests
+     */
     @Transactional(readOnly = true)
     public List<Ferie> getAllFerie() {
         return ferieRepository.findAll();
     }
 
+    /**
+     * Updates an existing vacation request with new information.
+     * Validates the new dates against the associated event constraints.
+     *
+     * @param id The ID of the vacation request to update
+     * @param request The update request containing new title and dates
+     * @return The updated vacation request
+     * @throws ResourceNotFoundException if the vacation request or associated event is not found
+     * @throws IllegalArgumentException if date validation fails
+     */
     @Transactional
     public Ferie updateFerie(Long id, UpdateFerieRequest request) {
         Ferie ferie = ferieRepository.findById(id)
@@ -91,6 +130,14 @@ public class FerieService {
         return ferieRepository.save(ferie);
     }
 
+    /**
+     * Updates the status of a vacation request.
+     *
+     * @param id The ID of the vacation request to update
+     * @param status The new status to set
+     * @return The updated vacation request
+     * @throws ResourceNotFoundException if the vacation request is not found
+     */
     @Transactional
     public Ferie updateFerieStatus(Long id, Status status) {
         Ferie ferie = ferieRepository.findById(id)
@@ -100,6 +147,12 @@ public class FerieService {
         return ferieRepository.save(ferie);
     }
 
+    /**
+     * Deletes a vacation request by ID.
+     *
+     * @param id The ID of the vacation request to delete
+     * @throws ResourceNotFoundException if the vacation request is not found
+     */
     @Transactional
     public void deleteFerie(Long id) {
         if (!ferieRepository.existsById(id)) {
@@ -108,6 +161,14 @@ public class FerieService {
         ferieRepository.deleteById(id);
     }
 
+    /**
+     * Validates vacation dates against business rules.
+     * Ensures dates are present, in correct order, not in the past, and within event boundaries.
+     *
+     * @param ferie The vacation request to validate
+     * @param event The associated event for boundary validation
+     * @throws IllegalArgumentException if any validation rule is violated
+     */
     private void validateFerieDates(Ferie ferie, Event event) {
         LocalDate today = LocalDate.now();
 

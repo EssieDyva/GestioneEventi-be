@@ -15,6 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Service class for managing team building event participations.
+ * Handles specialized participation logic for team building events including activity selection and popularity tracking.
+ *
+ */
 @Service
 public class TeamBuildingPartecipationService {
 

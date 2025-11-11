@@ -10,6 +10,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 
+/**
+ * Client service for communicating with the Employee Directory microservice.
+ * Provides employee validation functionality with caching and fallback support.
+ * Uses WebClient for reactive HTTP communication and Caffeine for caching.
+ *
+ */
 @Service
 public class EmployeeDirectoryClient {
 
@@ -19,6 +25,13 @@ public class EmployeeDirectoryClient {
     private final Cache<String, Boolean> emailCache;
     private final boolean fallbackAllow;
 
+    /**
+     * Constructor for EmployeeDirectoryClient.
+     * Initializes WebClient and cache with configuration from application properties.
+     *
+     * @param baseUrl The base URL of the employee directory service
+     * @param fallbackAllow Whether to allow access when the service is unreachable
+     */
     public EmployeeDirectoryClient(
             @Value("${app.employee-directory.url}") String baseUrl,
             @Value("${app.employee-directory.fallback-allow-if-unreachable}") boolean fallbackAllow) {
@@ -30,6 +43,14 @@ public class EmployeeDirectoryClient {
         this.fallbackAllow = fallbackAllow;
     }
 
+    /**
+     * Checks if an email belongs to a valid employee.
+     * Uses caching to improve performance and reduce external API calls.
+     * Falls back to configured behavior if the employee directory service is unreachable.
+     *
+     * @param email The email address to validate
+     * @return true if the email belongs to a valid employee, false otherwise
+     */
     public boolean isEmployee(String email) {
         Boolean cached = emailCache.getIfPresent(email.toLowerCase());
         if (cached != null) {
