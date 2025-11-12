@@ -36,8 +36,9 @@ public class TeamBuildingPartecipationController {
         return ResponseEntity.ok(new TeamBuildingPartecipationDTO(partecipation));
     }
 
-    @Operation(summary = "Elenca tutte le partecipazioni di un evento TEAM_BUILDING")
+    @Operation(summary = "Elenca tutte le partecipazioni di un evento TEAM_BUILDING (EDITOR/ADMIN)")
     @GetMapping
+    @PreAuthorize("hasAuthority('EDITOR') or hasAuthority('ADMIN')")
     public ResponseEntity<List<TeamBuildingPartecipationDTO>> getPartecipations(@PathVariable Long eventId) {
         List<TeamBuildingPartecipation> partecipations = partecipationService.getPartecipationsForEvent(eventId);
         List<TeamBuildingPartecipationDTO> partecipationDTOs = partecipations.stream()
