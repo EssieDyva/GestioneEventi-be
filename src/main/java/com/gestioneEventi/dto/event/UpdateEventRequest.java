@@ -18,7 +18,16 @@ public class UpdateEventRequest {
     
     @Schema(description = "Nuova data di fine", example = "2025-09-15")
     private LocalDate endDate;
-    
+
+    @Schema(description = "Data di inizio confermata (solo per TEAM_BUILDING)", example = "2025-09-12")
+    private LocalDate confirmedStartDate;
+
+    @Schema(description = "Data di fine confermata (solo per TEAM_BUILDING)", example = "2025-09-13")
+    private LocalDate confirmedEndDate;
+
+    @Schema(description = "ID dell'attività confermata (solo per TEAM_BUILDING)", example = "3")
+    private Long confirmedActivityId;
+
     @Schema(description = "Nuova lista degli ID degli utenti invitati", example = "[1, 3, 5, 7]")
     private Set<Long> invitedUserIds;
 }

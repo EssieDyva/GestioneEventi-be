@@ -50,6 +50,27 @@ public class Event {
     private LocalDate endDate;
 
     /**
+     * Confirmed start date for team building events.
+     * Set by admin/editor after reviewing user proposals.
+     * Only applicable for TEAM_BUILDING event type.
+     */
+    private LocalDate confirmedStartDate;
+
+    /**
+     * Confirmed end date for team building events.
+     * Set by admin/editor after reviewing user proposals.
+     * Only applicable for TEAM_BUILDING event type.
+     */
+    private LocalDate confirmedEndDate;
+
+    /**
+     * ID of the confirmed activity for team building events.
+     * References an Activity entity chosen by admin/editor.
+     * Only applicable for TEAM_BUILDING event type.
+     */
+    private Long confirmedActivityId;
+
+    /**
      * Type of the event.
      * Determines the category and behavior of the event.
      * Uses string enumeration for database storage.

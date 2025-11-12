@@ -150,6 +150,16 @@ public class EventService {
             event.setEndDate(request.getEndDate());
             validateEventDates(event);
 
+            // Handle confirmed fields only for TEAM_BUILDING events
+            if (event.getEventType() == EventType.TEAM_BUILDING) {
+                event.setConfirmedStartDate(request.getConfirmedStartDate());
+                event.setConfirmedEndDate(request.getConfirmedEndDate());
+                event.setConfirmedActivityId(request.getConfirmedActivityId());
+                validateConfirmedFields(event);
+            } else if (request.getConfirmedStartDate() != null || request.getConfirmedEndDate() != null || request.getConfirmedActivityId() != null) {
+                throw new IllegalArgumentException("I campi di conferma possono essere impostati solo per eventi di tipo TEAM_BUILDING");
+            }
+
             Set<User> oldInvited = new HashSet<>(event.getInvitedUsers());
 
             if (request.getInvitedUserIds() != null) {
@@ -221,6 +231,47 @@ public class EventService {
         }
         if (event.getStartDate().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("La data di inizio non può essere nel passato");
+        }
+    }
+
+    /**
+     * Validates the confirmed fields for team building events.
+     * Ensures confirmed dates are within event range and confirmed activity exists.
+     *
+     * @param event The event whose confirmed fields to validate
+     * @throws IllegalArgumentException if any validation rule is violated
+     */
+    private void validateConfirmedFields(Event event) {
+        LocalDate confirmedStart = event.getConfirmedStartDate();
+        LocalDate confirmedEnd = event.getConfirmedEndDate();
+        Long confirmedActivityId = event.getConfirmedActivityId();
+
+        // If any confirmed field is set, all must be set for consistency
+        boolean hasConfirmedDates = confirmedStart != null || confirmedEnd != null;
+        boolean hasConfirmedActivity = confirmedActivityId != null;
+
+        if (hasConfirmedDates || hasConfirmedActivity) {
+            if (confirmedStart == null || confirmedEnd == null || confirmedActivityId == null) {
+                throw new IllegalArgumentException("Tutti i campi di conferma (date e attività) devono essere impostati insieme");
+            }
+
+            // Validate confirmed dates are within event range
+            if (confirmedStart.isBefore(event.getStartDate()) || confirmedStart.isAfter(event.getEndDate())) {
+                throw new IllegalArgumentException("La data di inizio confermata deve essere compresa nell'intervallo dell'evento");
+            }
+            if (confirmedEnd.isBefore(event.getStartDate()) || confirmedEnd.isAfter(event.getEndDate())) {
+                throw new IllegalArgumentException("La data di fine confermata deve essere compresa nell'intervallo dell'evento");
+            }
+            if (confirmedStart.isAfter(confirmedEnd)) {
+                throw new IllegalArgumentException("La data di inizio confermata deve essere precedente o uguale alla data di fine confermata");
+            }
+
+            // Validate confirmed activity exists for this event
+            boolean activityExists = event.getActivities().stream()
+                    .anyMatch(activity -> activity.getId().equals(confirmedActivityId));
+            if (!activityExists) {
+                throw new IllegalArgumentException("L'attività confermata deve essere una delle attività associate all'evento");
+            }
         }
     }
 }

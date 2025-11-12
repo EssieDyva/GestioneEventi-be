@@ -26,7 +26,16 @@ public class EventDTO {
     
     @Schema(description = "Data di fine dell'evento", example = "2025-07-20")
     private LocalDate endDate;
-    
+
+    @Schema(description = "Data di inizio confermata (solo per TEAM_BUILDING)", example = "2025-07-16")
+    private LocalDate confirmedStartDate;
+
+    @Schema(description = "Data di fine confermata (solo per TEAM_BUILDING)", example = "2025-07-18")
+    private LocalDate confirmedEndDate;
+
+    @Schema(description = "ID dell'attività confermata (solo per TEAM_BUILDING)", example = "2")
+    private Long confirmedActivityId;
+
     @Schema(description = "Tipo di evento", example = "TEAM_BUILDING")
     private EventType eventType;
     
@@ -41,6 +50,9 @@ public class EventDTO {
         this.title = event.getTitle();
         this.startDate = event.getStartDate();
         this.endDate = event.getEndDate();
+        this.confirmedStartDate = event.getConfirmedStartDate();
+        this.confirmedEndDate = event.getConfirmedEndDate();
+        this.confirmedActivityId = event.getConfirmedActivityId();
         this.eventType = event.getEventType();
         this.createdBy = event.getCreatedBy() != null ? new UserDTO(event.getCreatedBy()) : null;
         this.invitedUsers = event.getInvitedUsers().stream()
